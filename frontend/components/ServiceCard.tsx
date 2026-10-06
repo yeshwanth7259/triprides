@@ -1,0 +1,3 @@
+import {Car,Bus,Plane,Route,Van} from 'lucide-react';
+const icons:any={taxi:Plane,car:Car,tempo:Van,mini:Bus,bus:Bus,outstation:Route};
+export default function ServiceCard({kind,title,desc}:{kind:string,title:string,desc:string}){const I=icons[kind]||Car;return <div className="card p-5 hover:-translate-y-1 transition"><div className="h-11 w-11 rounded-xl bg-blue-50 text-brand-blue grid place-items-center mb-4"><I/></div><h3 className="font-bold text-lg">{title}</h3><p className="text-sm text-slate-500 mt-1">{desc}</p><a href="/book" className="text-brand-orange text-sm font-bold mt-4 inline-block">Book now →</a></div>}
