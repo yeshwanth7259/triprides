@@ -52,7 +52,7 @@ _Please confirm your booking._`;
   return (
     <main className="min-h-screen bg-[#F9FAFB] overflow-hidden">
       {/* Hero Section */}
-      <section className="relative h-[400px] md:h-[550px] overflow-hidden bg-[#0F355C]">
+      <section className="relative h-[400px] md:h-[550px] mt-[72px] overflow-hidden bg-[#0F355C]">
         {/* Animated Banner Background */}
         <motion.div
           initial={{ scale: 1.05 }}
