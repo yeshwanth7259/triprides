@@ -6,8 +6,38 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('tempo');
-  const [form, setForm] = useState({ pickup: '', destination: '', date: '', time: '', vehicleInfo: '' });
+  const [form, setForm] = useState({ pickup: '', destination: '', date: '', time: '', passengers: '', vehicleInfo: '' });
   const [quoteStatus, setQuoteStatus] = useState<'idle' | 'generating' | 'done'>('idle');
+
+  const karnatakaLocations = [
+    "Bengaluru", "Kempegowda International Airport (BLR)", "Mysore", "Coorg (Madikeri)", 
+    "Mangaluru", "Hubballi (Hubli)", "Belagavi (Belgaum)", "Udupi", "Chikmagalur",
+    "Hampi", "Hassan", "Shimoga", "Tumkur", "Davangere", "Bijapur", "Gokarna", "Dandeli",
+    "Ooty", "Wayanad", "Munnar", "Kochi", "Chennai", "Hyderabad", "Goa", "Tirupati", "Nandi Hills"
+  ];
+
+  const getEstimatedPrice = () => {
+    const vehicle = form.vehicleInfo || vehicleOptions[activeTab][0];
+    const rates: any = {
+      'Hatchback (4 Seats)': [2000, 2500],
+      'Sedan (4 Seats)': [2500, 3200],
+      'SUV (6 Seats)': [3500, 4200],
+      'Innova (6 Seats)': [4000, 4800],
+      'Innova Crysta (7 Seats)': [4800, 5500],
+      '12 Seater Tempo Traveller': [5500, 6500],
+      '14 Seater Tempo Traveller': [6500, 7500],
+      '17 Seater Tempo Traveller': [7500, 8500],
+      '20 Seater Tempo Traveller': [8500, 9500],
+      '21 Seater Mini Bus': [9000, 11000],
+      '25 Seater Mini Bus': [11000, 13000],
+      '30 Seater Bus': [14000, 16000],
+      '35 Seater Bus': [16000, 18000],
+      '40 Seater Bus': [18000, 20000],
+      '50 Seater Bus': [22000, 26000]
+    };
+    const rate = rates[vehicle] || [3000, 4000];
+    return `₹${rate[0].toLocaleString()} - ₹${rate[1].toLocaleString()}`;
+  };
 
   const tabs = [
     { id: 'tempo', label: 'Tempo Traveller', icon: <Users size={14} /> },
@@ -40,11 +70,12 @@ export default function Home() {
 -----------------------
 *Category:* ${tabs.find(t => t.id === activeTab)?.label}
 *Vehicle Needed:* ${form.vehicleInfo || vehicleOptions[activeTab][0]}
+*Passengers:* ${form.passengers || 'Not specified'}
 *Route:* ${form.pickup} to ${form.destination}
 *Date:* ${form.date}
 *Time:* ${form.time}
 -----------------------
-*Estimated Fare:* ₹1,200 - ₹1,500
+*Estimated Fare (Per Day):* ${getEstimatedPrice()}
 _Please confirm your booking._`;
     window.open(`https://wa.me/917259335286?text=${encodeURIComponent(details)}`, '_blank');
   }
@@ -106,6 +137,7 @@ _Please confirm your booking._`;
                   <MapPin className="ml-4 text-red-500" size={18} />
                   <input
                     required
+                    list="locations"
                     placeholder="e.g. Bengaluru Airport"
                     className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
                     value={form.pickup}
@@ -120,6 +152,7 @@ _Please confirm your booking._`;
                   <MapPin className="ml-4 text-[#0F355C]" size={18} />
                   <input
                     required
+                    list="locations"
                     placeholder="e.g. Mysore / Coorg"
                     className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
                     value={form.destination}
@@ -129,7 +162,11 @@ _Please confirm your booking._`;
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-end">
+            <datalist id="locations">
+              {karnatakaLocations.map(loc => <option key={loc} value={loc} />)}
+            </datalist>
+
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 items-end">
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Travel Date</label>
                 <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
@@ -152,6 +189,21 @@ _Please confirm your booking._`;
                     className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
                     value={form.time}
                     onChange={e => setForm({ ...form, time: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Passengers</label>
+                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Count"
+                    required
+                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
+                    value={form.passengers}
+                    onChange={e => setForm({ ...form, passengers: e.target.value })}
                   />
                 </div>
               </div>
@@ -205,7 +257,7 @@ _Please confirm your booking._`;
                       <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">Quote Ready</div>
                       <h3 className="text-xl font-black text-[#0A3D73] mb-4 border-b pb-4">Estimated Quotation</h3>
 
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         <div>
                           <p className="text-xs text-slate-500 font-bold uppercase">Vehicle</p>
                           <p className="font-semibold text-slate-800">{tabs.find(t => t.id === activeTab)?.label}</p>
@@ -219,8 +271,12 @@ _Please confirm your booking._`;
                           <p className="font-semibold text-slate-800">{form.date}, {form.time}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Est. Price</p>
-                          <p className="font-black text-2xl text-[#FF7020]">₹1,200 <span className="text-sm font-medium text-slate-500">- ₹1,500</span></p>
+                          <p className="text-xs text-slate-500 font-bold uppercase">Passengers</p>
+                          <p className="font-semibold text-slate-800">{form.passengers}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 font-bold uppercase">Est. Price/Day</p>
+                          <p className="font-black text-2xl text-[#FF7020]">{getEstimatedPrice().split('-')[0]} <span className="text-sm font-medium text-slate-500">-{getEstimatedPrice().split('-')[1]}</span></p>
                         </div>
                       </div>
 
