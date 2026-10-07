@@ -22,8 +22,8 @@ export default function Header() {
             <span className="flex items-center gap-1.5 hover:text-white transition-colors cursor-default">
               <MapPin size={14} className="text-[#FF7020]" /> Uttharhalli, Bangalore - 560061
             </span>
-            <a href="mailto:yesh5yash@gmail.com" className="flex items-center gap-1.5 hover:text-white transition-colors">
-              <Mail size={14} className="text-[#FF7020]" /> yesh5yash@gmail.com
+            <a href="mailto:bookmyroute06@gmail.com" className="flex items-center gap-1.5 hover:text-white transition-colors">
+              <Mail size={14} className="text-[#FF7020]" /> bookmyroute06@gmail.com
             </a>
           </div>
           <div className="flex items-center gap-2">

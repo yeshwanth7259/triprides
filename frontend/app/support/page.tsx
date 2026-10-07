@@ -127,7 +127,7 @@ export default function SupportPage() {
               </div>
               <h3 className="text-xl font-black text-[#0A3D73] mb-2">Email Address</h3>
               <p className="text-slate-500 mb-1">Send us your detailed itinerary</p>
-              <a href="mailto:yesh5yash@gmail.com" className="text-lg font-bold text-[#0A3D73] hover:underline">yesh5yash@gmail.com</a>
+              <a href="mailto:bookmyroute06@gmail.com" className="text-lg font-bold text-[#0A3D73] hover:underline">bookmyroute06@gmail.com</a>
             </motion.div>
           </div>
 

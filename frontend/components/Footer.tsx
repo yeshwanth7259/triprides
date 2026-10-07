@@ -86,7 +86,7 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                 <Mail size={18} className="text-[#FF7020] shrink-0" />
-                <a href="mailto:yesh5yash@gmail.com" className="text-slate-600 hover:text-[#0A3D73] font-bold transition-colors text-sm">yesh5yash@gmail.com</a>
+                <a href="mailto:bookmyroute06@gmail.com" className="text-slate-600 hover:text-[#0A3D73] font-bold transition-colors text-sm">bookmyroute06@gmail.com</a>
               </li>
             </ul>
           </motion.div>
