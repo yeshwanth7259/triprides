@@ -20,20 +20,20 @@ export default function Home() {
     const vehicle = form.vehicleInfo || vehicleOptions[activeTab][0];
     const rates: any = {
       'Hatchback (4 Seats)': [2000, 2500],
-      'Sedan (4 Seats)': [2500, 3200],
-      'SUV (6 Seats)': [3500, 4200],
-      'Innova (6 Seats)': [4000, 4800],
-      'Innova Crysta (7 Seats)': [4800, 5500],
-      '12 Seater Tempo Traveller': [5500, 6500],
-      '14 Seater Tempo Traveller': [6500, 7500],
-      '17 Seater Tempo Traveller': [7500, 8500],
-      '20 Seater Tempo Traveller': [8500, 9500],
-      '21 Seater Mini Bus': [9000, 11000],
-      '25 Seater Mini Bus': [11000, 13000],
-      '30 Seater Bus': [14000, 16000],
-      '35 Seater Bus': [16000, 18000],
-      '40 Seater Bus': [18000, 20000],
-      '50 Seater Bus': [22000, 26000]
+      'Sedan (4 Seats)': [2500, 3000],
+      'SUV (6 Seats)': [3500, 4000],
+      'Innova (6 Seats)': [4000, 4500],
+      'Innova Crysta (7 Seats)': [4500, 5000],
+      '12 Seater Tempo Traveller': [6500, 7000],
+      '14 Seater Tempo Traveller': [7000, 7500],
+      '17 Seater Tempo Traveller': [7500, 8000],
+      '20 Seater Tempo Traveller': [8000, 8500],
+      '21 Seater Mini Bus': [8500, 9500],
+      '25 Seater Mini Bus': [10000, 12000],
+      '30 Seater Bus': [12000, 14000],
+      '35 Seater Bus': [14000, 16000],
+      '40 Seater Bus': [16000, 18000],
+      '50 Seater Bus': [20000, 24000]
     };
     const rate = rates[vehicle] || [3000, 4000];
     return `₹${rate[0].toLocaleString()} - ₹${rate[1].toLocaleString()}`;
