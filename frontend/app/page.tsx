@@ -89,7 +89,7 @@ _Please confirm your booking._`;
           initial={{ scale: 1.1, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
-          className="absolute inset-0 bg-cover bg-[15%_top] md:bg-[center_top] bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-left-top md:bg-[center_top] bg-no-repeat"
           style={{ backgroundImage: 'url("/banner.png")' }}
         />
 
@@ -334,7 +334,7 @@ _Please confirm your booking._`;
             viewport={{ once: true }}
             className="relative h-[400px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(15,53,92,0.15)] border-4 border-white"
           >
-            <img src="/banner.png" alt="BookMyRoute Fleet" className="w-full h-full object-cover object-[15%_top] md:object-[center_top]" />
+            <img src="/banner.png" alt="BookMyRoute Fleet" className="w-full h-full object-cover object-left-top md:object-[center_top]" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F355C]/90 via-[#0F355C]/40 to-transparent flex items-end p-8">
               <div className="text-white">
                 <h3 className="font-black text-3xl mb-2 flex items-center gap-2"><MapPin className="text-[#FF7020]" /> Across Karnataka</h3>

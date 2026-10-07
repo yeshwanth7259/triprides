@@ -70,7 +70,7 @@ export default function SupportPage() {
           initial={{ scale: 1.05 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: 'easeOut' }}
-          className="absolute inset-0 bg-cover bg-[15%_top] md:bg-[center_top] bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-left-top md:bg-[center_top] bg-no-repeat"
           style={{ backgroundImage: 'url("/banner.png")' }}
         />
         <div className="absolute inset-0 bg-[#0A3D73]/70 mix-blend-multiply"></div>
