@@ -9,7 +9,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
-  title: 'TripRide | Every Ride. Every Trip. One Place.',
+  title: 'BookMyRoute | Every Ride. Every Trip. One Place.',
   description: 'Taxi, airport transfers, cars, tempo travellers, mini buses and buses across Karnataka.',
 };
 

@@ -8,7 +8,7 @@ const blogData: any = {
   'multi-day-outstation-trips-planning': {
     title: 'Multi-Day Outstation Trips: How to Plan Your Journey',
     date: 'Oct 02, 2026',
-    author: 'TripRide Experts',
+    author: 'BookMyRoute Experts',
     tags: ['Outstation', 'Travel Tips', 'Family Trips'],
     image: '/vehicles/TEMPO-TRAVELLER-1.webp',
     content: `
@@ -28,7 +28,7 @@ const blogData: any = {
   'top-corporate-outing-resorts-bangalore': {
     title: 'Top 7 Corporate Outing Resorts Around Bangalore',
     date: 'Sep 28, 2026',
-    author: 'TripRide Corporate Team',
+    author: 'BookMyRoute Corporate Team',
     tags: ['Corporate', 'Resorts', 'Mini Bus'],
     image: '/vehicles/bus3a.jpg',
     content: `
@@ -49,7 +49,7 @@ const blogData: any = {
   'round-trip-vs-one-way-taxi': {
     title: 'Round Trip vs One Way: Which is Better for Outstation?',
     date: 'Sep 15, 2026',
-    author: 'TripRide Pricing Team',
+    author: 'BookMyRoute Pricing Team',
     tags: ['Taxi', 'Pricing', 'Outstation'],
     image: '/vehicles/New-Maruti-Suzuki-Dzire-1-jpg.webp',
     content: `
@@ -68,10 +68,10 @@ const blogData: any = {
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const post = blogData[params.slug];
   if (!post) {
-    return { title: 'Blog Not Found | TripRide' };
+    return { title: 'Blog Not Found | BookMyRoute' };
   }
   return {
-    title: `${post.title} | TripRide Blogs`,
+    title: `${post.title} | BookMyRoute Blogs`,
     description: post.content.substring(0, 150).replace(/<[^>]*>?/gm, ''),
     keywords: post.tags.join(', ')
   };
@@ -141,7 +141,7 @@ export default function BlogPost({ params }: { params: { slug: string } }) {
           <div className="mt-16 bg-[#0A3D73] rounded-2xl p-8 md:p-10 text-center relative overflow-hidden shadow-lg border-b-4 border-[#FF7020]">
             <div className="relative z-10">
               <h3 className="text-2xl font-black text-white mb-4">Ready to plan your trip?</h3>
-              <p className="text-blue-100 mb-8 max-w-lg mx-auto">Book a premium, highly maintained vehicle with TripRide today and experience the difference.</p>
+              <p className="text-blue-100 mb-8 max-w-lg mx-auto">Book a premium, highly maintained vehicle with BookMyRoute today and experience the difference.</p>
               <Link href="/" className="inline-flex items-center justify-center bg-[#FF7020] hover:bg-[#E55C0C] text-white font-bold py-3.5 px-8 rounded-xl transition-transform hover:scale-105">
                 Book a Ride Now
               </Link>

@@ -27,7 +27,7 @@ export default function SupportPage() {
     // Simulate backend processing delay
     setTimeout(() => {
       // 1. Prepare WhatsApp Message for Admin
-      const waText = `*New Booking Enquiry - TripRide* 🚕
+      const waText = `*New Booking Enquiry - BookMyRoute* 🚕
 -----------------------
 *Name:* ${form.name}
 *Phone:* ${form.phone}
@@ -100,7 +100,7 @@ export default function SupportPage() {
               </div>
               <h3 className="text-xl font-black text-[#0A3D73] mb-2">Office Address</h3>
               <p className="text-slate-500 leading-relaxed">
-                TripRide Travel Services<br/>
+                BookMyRoute Travel Services<br/>
                 Uttharhalli, Bangalore<br/>
                 Karnataka - 560061
               </p>

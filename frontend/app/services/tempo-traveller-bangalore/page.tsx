@@ -201,7 +201,7 @@ export default function TempoTravellerBangalore() {
 
       {/* Why Choose Us */}
       <section className="py-16 container-x">
-        <h2 className="text-3xl font-black font-display text-[#0A3D73] mb-12 text-center">Why Book With TripRide?</h2>
+        <h2 className="text-3xl font-black font-display text-[#0A3D73] mb-12 text-center">Why Book With BookMyRoute?</h2>
         <div className="grid md:grid-cols-4 gap-6">
           <div className="bg-blue-50/50 p-6 rounded-xl border border-blue-100 text-center">
             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-[#0A3D73]"><Shield size={28}/></div>

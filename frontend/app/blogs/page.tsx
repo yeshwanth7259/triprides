@@ -3,9 +3,9 @@ import Link from 'next/link';
 import { Calendar, ChevronRight } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Travel Blogs & Guides | TripRide Bangalore',
-  description: 'Read the latest travel guides, tips for outstation trips, and vehicle rental advice from TripRide. Learn how to plan the perfect journey across Karnataka.',
-  keywords: 'Travel Blog Bangalore, Tempo Traveller Tips, Outstation Journey Guide, Corporate Outing Resorts, TripRide Blog',
+  title: 'Travel Blogs & Guides | BookMyRoute Bangalore',
+  description: 'Read the latest travel guides, tips for outstation trips, and vehicle rental advice from BookMyRoute. Learn how to plan the perfect journey across Karnataka.',
+  keywords: 'Travel Blog Bangalore, Tempo Traveller Tips, Outstation Journey Guide, Corporate Outing Resorts, BookMyRoute Blog',
 };
 
 const blogs = [
@@ -68,7 +68,7 @@ export default function BlogsPage() {
         <div className="container-x">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-black text-white font-display mb-4">
-              TripRide Travel Blog
+              BookMyRoute Travel Blog
             </h1>
             <p className="text-blue-100 text-lg">
               Expert guides, travel tips, and vehicle rental advice for your journeys across Karnataka and beyond.

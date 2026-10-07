@@ -36,7 +36,7 @@ export default function Home() {
   }
 
   function sendToWhatsApp() {
-    const details = `*TripRide Official Quote* 🚕
+    const details = `*BookMyRoute Official Quote* 🚕
 -----------------------
 *Category:* ${tabs.find(t => t.id === activeTab)?.label}
 *Vehicle Needed:* ${form.vehicleInfo || vehicleOptions[activeTab][0]}
@@ -256,7 +256,7 @@ _Please confirm your booking._`;
               Karnataka's Most Trusted <br /><span className="text-[#FF7020]">Travel Partner</span>
             </h2>
             <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-              Whether you are planning a corporate outing, a family vacation, or a quick airport transfer, TripRide provides top-class, well-maintained vehicles with professional drivers to ensure your journey is safe, comfortable, and highly memorable.
+              Whether you are planning a corporate outing, a family vacation, or a quick airport transfer, BookMyRoute provides top-class, well-maintained vehicles with professional drivers to ensure your journey is safe, comfortable, and highly memorable.
             </p>
             <div className="flex flex-col gap-4">
               {[
@@ -278,7 +278,7 @@ _Please confirm your booking._`;
             viewport={{ once: true }}
             className="relative h-[400px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(15,53,92,0.15)] border-4 border-white"
           >
-            <img src="/banner.png" alt="TripRide Fleet" className="w-full h-full object-cover object-left" />
+            <img src="/banner.png" alt="BookMyRoute Fleet" className="w-full h-full object-cover object-left" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F355C]/90 via-[#0F355C]/40 to-transparent flex items-end p-8">
               <div className="text-white">
                 <h3 className="font-black text-3xl mb-2 flex items-center gap-2"><MapPin className="text-[#FF7020]" /> Across Karnataka</h3>
@@ -367,7 +367,7 @@ _Please confirm your booking._`;
             {[
               { name: "Rahul S.", text: "Booked a 14 seater Tempo Traveller for a family trip to Coorg. The vehicle was spotless, driver was very professional, and we had an amazing time!", rating: 5, trip: "Bangalore to Coorg" },
               { name: "Priya M.", text: "Excellent service! We rented a mini bus for our corporate outing. The entire process from booking to the actual trip was seamless and completely transparent.", rating: 5, trip: "Corporate Outing" },
-              { name: "Amit K.", text: "I regularly use TripRide for airport transfers. They are always on time, the cars are clean, and the pricing is very reasonable compared to others.", rating: 4, trip: "Airport Transfer" }
+              { name: "Amit K.", text: "I regularly use BookMyRoute for airport transfers. They are always on time, the cars are clean, and the pricing is very reasonable compared to others.", rating: 4, trip: "Airport Transfer" }
             ].map((review, i) => (
               <motion.div
                 key={i}

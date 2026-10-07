@@ -7,7 +7,7 @@ import { notFound } from 'next/navigation';
 const serviceData: any = {
   'bus-bangalore': {
     title: 'Bus on Rent in Bangalore',
-    description: 'Looking for a reliable Bus on Rent in Bangalore? TripRide offers premium 21 to 50 seater AC and Non-AC pushback buses for outstation trips, corporate events, and weddings.',
+    description: 'Looking for a reliable Bus on Rent in Bangalore? BookMyRoute offers premium 21 to 50 seater AC and Non-AC pushback buses for outstation trips, corporate events, and weddings.',
     heroImage: '/vehicles/bus3a.jpg',
     seoTitle: 'Bus on Rent in Bangalore | 21 to 50 Seater Pushback Buses',
     seoKeywords: 'Bus on rent in Bangalore, AC Bus Rental, 50 seater bus rent, Mini bus for rent, Corporate bus rent Bangalore'
@@ -23,7 +23,7 @@ const serviceData: any = {
 
 export async function generateMetadata({ params }: { params: { service: string } }): Promise<Metadata> {
   const service = serviceData[params.service];
-  if (!service) return { title: 'Service Not Found | TripRide' };
+  if (!service) return { title: 'Service Not Found | BookMyRoute' };
   
   return {
     title: service.seoTitle,

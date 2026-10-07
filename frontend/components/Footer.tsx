@@ -30,9 +30,9 @@ export default function Footer() {
           
           {/* Company Info */}
           <motion.div variants={itemVariants}>
-            <img src="/logo.png" alt="TripRide Logo" className="h-[80px] w-auto mb-6 object-contain" />
+            <img src="/logo.png" alt="BookMyRoute Logo" className="h-[80px] w-auto mb-6 object-contain" />
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              TripRide is Karnataka's most trusted travel partner, offering premium, safe, and comfortable transportation services including Tempo Travellers, Cars, and Buses for every kind of journey.
+              BookMyRoute is Karnataka's most trusted travel partner, offering premium, safe, and comfortable transportation services including Tempo Travellers, Cars, and Buses for every kind of journey.
             </p>
             <div className="flex gap-4">
               <a href="#" className="w-9 h-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-[#FF7020] hover:text-white hover:border-[#FF7020] transition-all shadow-sm"><Facebook size={16} /></a>
@@ -96,7 +96,7 @@ export default function Footer() {
         {/* Copyright Bottom Bar */}
         <motion.div variants={itemVariants} className="border-t border-slate-200 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-400 text-sm text-center md:text-left font-medium">
-            &copy; {new Date().getFullYear()} TripRide Travel Services. All Rights Reserved.
+            &copy; {new Date().getFullYear()} BookMyRoute Travel Services. All Rights Reserved.
           </p>
           <div className="flex gap-6">
             <Link href="/terms" className="text-slate-400 hover:text-[#FF7020] transition-colors text-sm font-medium">Terms & Conditions</Link>

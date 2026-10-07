@@ -3,9 +3,9 @@ import { Shield, Users, Clock, MapPin, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 
 export const metadata: Metadata = {
-  title: 'About TripRide | Premium Tempo Traveller & Bus Rental in Bangalore',
-  description: 'TripRide is Karnataka\'s leading travel agency providing safe, reliable, and comfortable Tempo Travellers, Mini Buses, and Car rentals for outstation and local trips.',
-  keywords: 'About TripRide, Travel Agency Bangalore, Tempo Traveller Rental Bangalore, Mini Bus Rent Karnataka, Safe Cab Service, Outstation Taxi Bangalore',
+  title: 'About BookMyRoute | Premium Tempo Traveller & Bus Rental in Bangalore',
+  description: 'BookMyRoute is Karnataka\'s leading travel agency providing safe, reliable, and comfortable Tempo Travellers, Mini Buses, and Car rentals for outstation and local trips.',
+  keywords: 'About BookMyRoute, Travel Agency Bangalore, Tempo Traveller Rental Bangalore, Mini Bus Rent Karnataka, Safe Cab Service, Outstation Taxi Bangalore',
 };
 
 export default function AboutPage() {
@@ -17,7 +17,7 @@ export default function AboutPage() {
         <div className="container-x">
           <div className="max-w-3xl">
             <h1 className="text-4xl md:text-5xl font-black text-white font-display mb-4">
-              About TripRide Travel Services
+              About BookMyRoute Travel Services
             </h1>
             <p className="text-blue-100 text-lg">
               Karnataka's most trusted and reliable transportation partner for safe, comfortable, and memorable journeys.
@@ -32,7 +32,7 @@ export default function AboutPage() {
           <div>
             <h2 className="text-3xl font-black text-[#0A3D73] mb-6">Our Mission & Vision</h2>
             <p className="text-slate-600 leading-relaxed mb-6">
-              At <strong>TripRide</strong>, our mission is to revolutionize the travel experience across Karnataka by providing top-tier, highly maintained vehicles at transparent and affordable prices. Whether you need a <strong>Tempo Traveller on rent in Bangalore</strong> for a family trip to Coorg, or a large <strong>Bus for a corporate outing</strong>, we are dedicated to making your journey seamless.
+              At <strong>BookMyRoute</strong>, our mission is to revolutionize the travel experience across Karnataka by providing top-tier, highly maintained vehicles at transparent and affordable prices. Whether you need a <strong>Tempo Traveller on rent in Bangalore</strong> for a family trip to Coorg, or a large <strong>Bus for a corporate outing</strong>, we are dedicated to making your journey seamless.
             </p>
             <p className="text-slate-600 leading-relaxed mb-8">
               With years of experience in the travel and logistics industry, we pride ourselves on our fleet quality and our highly professional, background-verified drivers who prioritize your safety above all else.
@@ -54,7 +54,7 @@ export default function AboutPage() {
             {/* Using native img for strict SEO alt tags */}
             <img 
               src="/banner.png" 
-              alt="TripRide Premium Tempo Travellers and Buses fleet in Bangalore" 
+              alt="BookMyRoute Premium Tempo Travellers and Buses fleet in Bangalore" 
               className="w-full h-full object-cover"
             />
           </div>
@@ -62,7 +62,7 @@ export default function AboutPage() {
 
         {/* Why Choose Us Section (SEO Rich) */}
         <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-10 md:p-16">
-          <h2 className="text-3xl font-black text-[#0A3D73] mb-12 text-center">Why Choose TripRide in Bangalore?</h2>
+          <h2 className="text-3xl font-black text-[#0A3D73] mb-12 text-center">Why Choose BookMyRoute in Bangalore?</h2>
           
           <div className="grid md:grid-cols-3 gap-10">
             <div className="flex flex-col items-center text-center">
