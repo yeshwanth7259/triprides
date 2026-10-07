@@ -9,7 +9,7 @@ export default function TempoTravellerBangalore() {
       <section className="bg-[#0A3D73] py-12 md:py-20 px-4 relative overflow-hidden">
         {/* Animated Banner Background */}
         <div
-          className="absolute inset-0 bg-cover bg-[center_top] bg-no-repeat opacity-40 mix-blend-overlay"
+          className="absolute inset-0 bg-cover bg-[15%_top] md:bg-[center_top] bg-no-repeat opacity-40 mix-blend-overlay"
           style={{ backgroundImage: 'url("/banner.png")' }}
         />
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '24px 24px'}}></div>
