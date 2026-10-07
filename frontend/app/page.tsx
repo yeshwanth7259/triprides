@@ -55,9 +55,9 @@ _Please confirm your booking._`;
       <section className="relative h-[400px] md:h-[550px] mt-[72px] overflow-hidden bg-[#0F355C]">
         {/* Animated Banner Background */}
         <motion.div
-          initial={{ scale: 1.05 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 1.5, ease: 'easeOut' }}
+          initial={{ scale: 1.1, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
           className="absolute inset-0 bg-cover bg-[center_top] bg-no-repeat"
           style={{ backgroundImage: 'url("/banner.png")' }}
         />
@@ -72,10 +72,10 @@ _Please confirm your booking._`;
       {/* Search Card */}
       <div className="container-x relative -mt-[180px] md:-mt-[120px] z-20 mb-16">
         <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-white rounded-[16px] shadow-[0_15px_50px_rgba(0,0,0,0.12)] overflow-hidden border border-slate-100"
+          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.3, type: "spring", bounce: 0.4 }}
+          className="bg-white rounded-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden border border-slate-100"
         >
           {/* Form Header */}
           <div className="bg-slate-50 border-b border-slate-200 p-6 md:px-10 text-center md:text-left">
@@ -321,14 +321,19 @@ _Please confirm your booking._`;
               key={i}
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-3xl p-8 min-w-[300px] md:min-w-[340px] shadow-xl hover:-translate-y-3 transition-transform cursor-pointer group border-b-4 border-transparent hover:border-[#FF7020]"
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.15, type: "spring", stiffness: 100 }}
+              whileHover={{ y: -10, scale: 1.02 }}
+              className="bg-white rounded-3xl p-8 min-w-[300px] md:min-w-[340px] shadow-xl transition-all cursor-pointer group border-b-4 border-transparent hover:border-[#FF7020] hover:shadow-2xl"
             >
-              <div className="bg-orange-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform shadow-sm">
+              <motion.div 
+                whileHover={{ rotate: [0, -10, 10, 0] }}
+                transition={{ duration: 0.5 }}
+                className="bg-orange-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 shadow-sm"
+              >
                 {srv.icon}
-              </div>
-              <h3 className="text-2xl font-black text-[#0A3D73] mb-3 font-display">{srv.name}</h3>
+              </motion.div>
+              <h3 className="text-2xl font-black text-[#0A3D73] mb-3 font-display group-hover:text-[#FF7020] transition-colors">{srv.name}</h3>
               <p className="text-slate-500 mb-8 font-medium">{srv.desc}</p>
               <Link href="/vehicles" className="text-[#FF7020] font-bold flex items-center gap-2 group-hover:translate-x-2 transition-transform">
                 Explore Vehicle <span className="text-xl">→</span>
@@ -371,18 +376,19 @@ _Please confirm your booking._`;
             ].map((review, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                className="bg-slate-50 rounded-2xl p-8 border border-slate-100 relative"
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: i * 0.2, type: "spring", bounce: 0.4 }}
+                whileHover={{ y: -8, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)" }}
+                className="bg-slate-50 rounded-2xl p-8 border border-slate-100 relative transition-all"
               >
                 <div className="flex gap-1 mb-4 text-[#FF7020]">
-                  {[...Array(review.rating)].map((_, idx) => <svg key={idx} width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>)}
+                  {[...Array(review.rating)].map((_, idx) => <motion.svg initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 + (idx * 0.1) }} key={idx} width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></motion.svg>)}
                 </div>
                 <p className="text-slate-700 italic mb-6">"{review.text}"</p>
                 <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-10 h-10 bg-[#0A3D73] rounded-full flex items-center justify-center text-white font-bold">{review.name.charAt(0)}</div>
+                  <div className="w-10 h-10 bg-[#0A3D73] rounded-full flex items-center justify-center text-white font-bold shadow-md">{review.name.charAt(0)}</div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-sm">{review.name}</h4>
                     <p className="text-xs text-slate-500">{review.trip}</p>
@@ -415,17 +421,29 @@ _Please confirm your booking._`;
           ].map((faq, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, x: -20 }}
+              initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow cursor-pointer group"
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ delay: i * 0.15, type: "spring" }}
+              whileHover={{ scale: 1.02 }}
+              className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-[#FF7020]/30 transition-all cursor-pointer group"
             >
               <h4 className="font-bold text-slate-800 text-lg group-hover:text-[#0A3D73] transition-colors flex justify-between items-center">
                 {faq.q}
-                <span className="text-[#FF7020] text-xl">+</span>
+                <motion.span 
+                  className="text-[#FF7020] text-xl bg-orange-50 w-8 h-8 rounded-full flex items-center justify-center"
+                  whileHover={{ rotate: 90 }}
+                >
+                  +
+                </motion.span>
               </h4>
-              <p className="text-slate-500 mt-3 text-sm leading-relaxed hidden group-hover:block">{faq.a}</p>
+              <motion.div 
+                initial={{ height: 0, opacity: 0 }}
+                whileHover={{ height: "auto", opacity: 1 }}
+                className="overflow-hidden"
+              >
+                <p className="text-slate-500 mt-4 text-sm leading-relaxed">{faq.a}</p>
+              </motion.div>
             </motion.div>
           ))}
         </div>
