@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Car, Users, Bus, MapPin, Navigation, Mail, User, Phone, 
   Calendar, Clock, CheckCircle2, ArrowRight, Sparkles, Check, ChevronDown
@@ -30,7 +30,10 @@ export default function BookTripModal({
   initialVehicleId 
 }: BookTripModalProps) {
   const [category, setCategory] = useState<VehicleCategory>(initialCategory);
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(initialVehicleId || '');
+  const initialAvailable = FLEET_DATA.filter(v => v.category === initialCategory);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string>(
+    initialVehicleId || (initialAvailable[0]?.id ?? 'tempo-12')
+  );
   
   // Passenger details
   const [fullName, setFullName] = useState('');
@@ -48,6 +51,19 @@ export default function BookTripModal({
   const [step, setStep] = useState<'form' | 'success'>('form');
   const [locating, setLocating] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close custom model dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Update default vehicle when category changes
   useEffect(() => {
@@ -55,15 +71,22 @@ export default function BookTripModal({
     if (available.length > 0 && !available.some(v => v.id === selectedVehicleId)) {
       setSelectedVehicleId(available[0].id);
     }
+    setModelDropdownOpen(false);
   }, [category, selectedVehicleId]);
 
   useEffect(() => {
     if (isOpen) {
-      if (initialCategory) setCategory(initialCategory);
+      const cat = initialCategory || 'tempo';
+      setCategory(cat);
       if (initialVehicleId) {
         setSelectedVehicleId(initialVehicleId);
         const v = FLEET_DATA.find(x => x.id === initialVehicleId);
         if (v) setCategory(v.category);
+      } else {
+        const available = FLEET_DATA.filter(v => v.category === cat);
+        if (available.length > 0) {
+          setSelectedVehicleId(available[0].id);
+        }
       }
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -71,6 +94,7 @@ export default function BookTripModal({
       if (!travelDate) setTravelDate(dateStr);
       setStep('form');
       setErrorMsg('');
+      setModelDropdownOpen(false);
     }
   }, [isOpen, initialCategory, initialVehicleId]);
 
@@ -142,7 +166,7 @@ export default function BookTripModal({
       passengers: selectedVehicle?.seats || 4,
     };
 
-    // Store lead silently
+    // Store lead silently in backend
     fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -198,7 +222,7 @@ export default function BookTripModal({
         {step === 'form' ? (
           <form onSubmit={handleSubmitToWhatsApp} className="flex-1 flex flex-col overflow-hidden">
             {/* Scrollable Form Body */}
-            <div className="overflow-y-auto p-4 space-y-3 flex-1 text-slate-800">
+            <div className="overflow-y-auto p-4 space-y-3.5 flex-1 text-slate-800">
               
               {/* 1. Category Selector (4 Compact Tabs in 1 Row) */}
               <div>
@@ -218,6 +242,7 @@ export default function BookTripModal({
                         onClick={() => {
                           setCategory(cat.id);
                           setErrorMsg('');
+                          setModelDropdownOpen(false);
                         }}
                         className={`py-1.5 px-1 rounded-lg text-center transition-all flex flex-col items-center justify-center cursor-pointer ${
                           isSelected 
@@ -243,32 +268,79 @@ export default function BookTripModal({
                 </div>
               </div>
 
-              {/* 2. Specific Model Dropdown + Live Pricing Badge */}
+              {/* 2. Specific Model Selector + Live Pricing Badge */}
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] font-black uppercase tracking-wider text-slate-500">
                     Model & Rate
                   </label>
                   {selectedVehicle && (
-                    <span className="text-[10px] font-black text-[#FF7020] bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200/60">
+                    <span className="text-[10px] font-black text-[#FF7020] bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-200/60 shadow-xs">
                       ₹{selectedVehicle.pricing.outstationPerKm}/km • Local: ₹{selectedVehicle.pricing.local8Hr80Km}
                     </span>
                   )}
                 </div>
-                <div className="relative">
-                  <select
-                    value={selectedVehicleId}
-                    onChange={(e) => setSelectedVehicleId(e.target.value)}
-                    className="w-full h-9 px-2.5 pl-8 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] appearance-none cursor-pointer"
+
+                {/* Custom Elegant Dropdown - 100% Bug Free on Windows & Mobile */}
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                    className="w-full h-10 px-3 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 focus:border-[#0A3D73] focus:bg-white rounded-xl text-left flex items-center justify-between transition-all cursor-pointer shadow-xs"
                   >
-                    {currentVehicles.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.name} ({v.seatsLabel})
-                      </option>
-                    ))}
-                  </select>
-                  <Users size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                    <div className="flex items-center gap-2 min-w-0 pr-2">
+                      <Users size={15} className="text-[#0A3D73] shrink-0" />
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                        {selectedVehicle ? `${selectedVehicle.name} (${selectedVehicle.seatsLabel})` : 'Select Vehicle Model'}
+                      </span>
+                    </div>
+                    <ChevronDown 
+                      size={15} 
+                      className={`text-slate-500 shrink-0 transition-transform duration-200 ${modelDropdownOpen ? 'rotate-180 text-[#0A3D73]' : ''}`} 
+                    />
+                  </button>
+
+                  {/* Dropdown Menu Popup */}
+                  {modelDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 max-h-56 overflow-y-auto divide-y divide-slate-100 animate-in fade-in zoom-in-95 duration-150">
+                      {currentVehicles.map((v) => {
+                        const isCurrent = v.id === (selectedVehicle?.id || selectedVehicleId);
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedVehicleId(v.id);
+                              setModelDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-3.5 py-2.5 flex items-center justify-between transition-colors cursor-pointer ${
+                              isCurrent 
+                                ? 'bg-blue-50/80 text-[#0A3D73] font-bold' 
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <div className="min-w-0 pr-2">
+                              <div className="text-xs font-black truncate flex items-center gap-1.5">
+                                {isCurrent && <Check size={13} className="text-[#0A3D73] shrink-0 stroke-[2.5]" />}
+                                <span>{v.name}</span>
+                              </div>
+                              <div className="text-[10px] text-slate-500 font-medium pl-4">
+                                {v.seatsLabel} • Pushback AC
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-xs font-black text-[#FF7020]">
+                                ₹{v.pricing.outstationPerKm}/km
+                              </div>
+                              <div className="text-[9px] text-slate-400">
+                                Local: ₹{v.pricing.local8Hr80Km}
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -279,14 +351,14 @@ export default function BookTripModal({
                     Your Name *
                   </label>
                   <div className="relative">
-                    <User size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <User size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       required
                       placeholder="e.g. Ramesh K"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full h-9 pl-7 pr-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -295,8 +367,8 @@ export default function BookTripModal({
                   <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
                     WhatsApp Number *
                   </label>
-                  <div className="relative flex rounded-lg bg-slate-50 border border-slate-200 overflow-hidden focus-within:border-[#0A3D73] focus-within:bg-white">
-                    <span className="bg-slate-100 px-2 py-1.5 text-slate-600 font-bold text-[11px] border-r border-slate-200 flex items-center">
+                  <div className="relative flex rounded-xl bg-slate-50 border border-slate-200 overflow-hidden focus-within:border-[#0A3D73] focus-within:bg-white transition-colors">
+                    <span className="bg-slate-100 px-2.5 py-2 text-slate-600 font-bold text-xs border-r border-slate-200 flex items-center">
                       +91
                     </span>
                     <input
@@ -306,7 +378,7 @@ export default function BookTripModal({
                       placeholder="9876543210"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                      className="w-full h-9 px-2 text-xs font-semibold text-slate-800 focus:outline-none bg-transparent"
+                      className="w-full h-10 px-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none bg-transparent"
                     />
                   </div>
                 </div>
@@ -329,14 +401,14 @@ export default function BookTripModal({
                     </button>
                   </div>
                   <div className="relative">
-                    <MapPin size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#FF7020]" />
+                    <MapPin size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#FF7020]" />
                     <input
                       type="text"
                       required
                       placeholder="e.g. Uttarahalli / Indiranagar"
                       value={pickupLocation}
                       onChange={(e) => setPickupLocation(e.target.value)}
-                      className="w-full h-9 pl-7 pr-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -346,13 +418,13 @@ export default function BookTripModal({
                     Drop / Destination
                   </label>
                   <div className="relative">
-                    <MapPin size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <MapPin size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       placeholder="e.g. Coorg, Mysore, Airport"
                       value={dropLocation}
                       onChange={(e) => setDropLocation(e.target.value)}
-                      className="w-full h-9 pl-7 pr-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -364,16 +436,19 @@ export default function BookTripModal({
                   <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">
                     Trip Type
                   </label>
-                  <select
-                    value={tripType}
-                    onChange={(e) => setTripType(e.target.value as any)}
-                    className="w-full h-9 px-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
-                  >
-                    <option>Outstation Round Trip</option>
-                    <option>Local 8Hr/80Km</option>
-                    <option>Airport Pickup/Drop</option>
-                    <option>One Way Outstation</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={tripType}
+                      onChange={(e) => setTripType(e.target.value as any)}
+                      className="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] appearance-none cursor-pointer pr-7"
+                    >
+                      <option>Outstation Round Trip</option>
+                      <option>Local 8Hr/80Km</option>
+                      <option>Airport Pickup/Drop</option>
+                      <option>One Way Outstation</option>
+                    </select>
+                    <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div>
@@ -386,13 +461,13 @@ export default function BookTripModal({
                       required
                       value={travelDate}
                       onChange={(e) => setTravelDate(e.target.value)}
-                      className="w-full h-9 px-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 px-1.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                     />
                     <input
                       type="time"
                       value={travelTime}
                       onChange={(e) => setTravelTime(e.target.value)}
-                      className="w-full h-9 px-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 px-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                     />
                   </div>
                 </div>
@@ -407,13 +482,13 @@ export default function BookTripModal({
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full h-9 px-2 rounded-lg bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                   />
                 </div>
               )}
 
               {errorMsg && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded-lg text-red-600 text-xs font-bold">
+                <div className="p-2.5 bg-red-50 border border-red-200 rounded-xl text-red-600 text-xs font-bold">
                   ⚠️ {errorMsg}
                 </div>
               )}
@@ -423,7 +498,7 @@ export default function BookTripModal({
             <div className="p-3 bg-slate-50 border-t border-slate-100 shrink-0">
               <button
                 type="submit"
-                className="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black text-xs sm:text-sm py-2.5 px-4 rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black text-xs sm:text-sm py-3 px-4 rounded-xl transition-all shadow-md active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
