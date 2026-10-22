@@ -131,51 +131,20 @@ _Please send me the formal quotation and confirm vehicle booking._`;
 
   return (
     <main className="min-h-screen bg-[#F9FAFB] overflow-hidden pb-16">
-      {/* Hero Section */}
-      <section className="relative h-[440px] md:h-[580px] mt-[72px] overflow-hidden bg-[#0F355C]">
-        <motion.div
-          initial={{ scale: 1.08, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
-          className="absolute inset-0 bg-cover bg-left-top md:bg-[center_top] bg-no-repeat opacity-40 mix-blend-overlay"
-          style={{ backgroundImage: 'url("/banner.png")' }}
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0F355C] via-[#0F355C]/80 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#F9FAFB] to-transparent"></div>
-
-        <div className="container-x relative z-10 pt-16 md:pt-24 max-w-4xl">
-          <div className="inline-flex items-center gap-2 bg-[#FF7020] text-white text-xs font-black px-3.5 py-1.5 rounded-full mb-4 uppercase tracking-wider shadow-sm">
-            <span>⭐</span> Karnataka's #1 Fleet Rental Partner
-          </div>
-          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-display text-white tracking-tight leading-[1.15] mb-4 drop-shadow-md">
-            Cab, Tempo Traveller & Bus Rental in Bangalore
-          </h1>
-          <p className="text-blue-100 text-base sm:text-lg max-w-2xl font-medium leading-relaxed drop-shadow-sm mb-6">
-            Rent pristine Cabs (4–7 Seats), Tempo Travellers (8–20 Seats), Mini Buses (12–25 Seats), and Tourist Buses (27–50 Seats) at transparent per-kilometer rates.
-          </p>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => openBookingModal()}
-              className="bg-[#FF7020] hover:bg-[#e55c0c] text-white font-black px-7 py-3.5 rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer"
-            >
-              <Ticket size={18} />
-              <span>Book Your Trip Now</span>
-            </button>
-            <Link
-              href="/pricing"
-              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3.5 rounded-xl backdrop-blur-md border border-white/20 transition-all flex items-center gap-2"
-            >
-              <span>View Pricing Matrix</span>
-              <ArrowRight size={16} />
-            </Link>
-          </div>
+      {/* 1. End-to-End Hero Banner Graphic (Clean Image, No Overlay Text) */}
+      <section className="relative w-full mt-[72px] bg-[#0A3D73] overflow-hidden">
+        <h1 className="sr-only">BookMyRoute | Cab, Tempo Traveller, Mini Bus & Bus Rental in Bangalore</h1>
+        <div className="w-full">
+          <img 
+            src="/banner.png" 
+            alt="BookMyRoute Fleet Banner - Cabs, Tempo Travellers, Mini Buses and Coaches" 
+            className="w-full h-auto block object-cover md:object-contain max-h-[580px] mx-auto"
+          />
         </div>
       </section>
 
-      {/* Tejas Travels Search Card */}
-      <div className="container-x relative -mt-[140px] md:-mt-[110px] z-20 mb-16">
+      {/* 2. Tejas Travels Search & Booking Card */}
+      <div className="container-x relative -mt-4 sm:-mt-8 md:-mt-12 z-20 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 40, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
