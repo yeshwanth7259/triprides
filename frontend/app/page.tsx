@@ -232,36 +232,39 @@ _Please send me the formal quotation and confirm vehicle availability._`;
               {karnatakaLocations.map(loc => <option key={loc} value={loc} />)}
             </datalist>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
+              {/* 1. Travel Date */}
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Travel Date</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="date"
                     required
-                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm cursor-pointer"
                     value={form.date}
                     onChange={e => setForm({ ...form, date: e.target.value })}
                   />
                 </div>
               </div>
 
+              {/* 2. Pickup Time */}
               <div className="relative">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Time</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pickup Time</label>
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="time"
                     required
-                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm cursor-pointer"
                     value={form.time}
                     onChange={e => setForm({ ...form, time: e.target.value })}
                   />
                 </div>
               </div>
 
+              {/* 3. Passengers */}
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Passengers</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="number"
                     min="1"
@@ -274,11 +277,17 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                 </div>
               </div>
 
-              <div className="relative col-span-2 md:col-span-1">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Vehicle Model</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
+              {/* 4. Vehicle Model */}
+              <div className="relative">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Vehicle Model</label>
+                  <span className="text-[10px] font-black text-[#FF7020] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-200/50">
+                    {getEstimatedPrice().split('(')[0].trim()}
+                  </span>
+                </div>
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <select
-                    className="w-full bg-transparent px-3 py-3 outline-none text-slate-800 font-semibold text-xs appearance-none cursor-pointer"
+                    className="w-full bg-transparent px-3 py-3 outline-none text-slate-800 font-semibold text-xs sm:text-sm appearance-none cursor-pointer pr-8"
                     value={form.vehicleInfo}
                     onChange={e => setForm({ ...form, vehicleInfo: e.target.value })}
                   >
@@ -287,19 +296,38 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                     ))}
                   </select>
                   <div className="absolute right-3 pointer-events-none text-slate-400">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Row 3: Dedicated Action Bar with Beautifully Aligned WhatsApp Button & Trust Badges */}
+            <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-6 text-xs font-bold text-slate-500">
+                <span className="flex items-center gap-1.5 text-slate-600">
+                  <CheckCircle size={15} className="text-emerald-500 shrink-0" />
+                  <span>Instant WhatsApp Quotation</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-600">
+                  <CheckCircle size={15} className="text-emerald-500 shrink-0" />
+                  <span>Zero Advance Payment</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-600 hidden md:flex">
+                  <CheckCircle size={15} className="text-emerald-500 shrink-0" />
+                  <span>Helpline ({CONTACT_PHONE})</span>
+                </span>
               </div>
 
               <button
                 type="submit"
-                className="bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 col-span-2 md:col-span-1 h-[48px] cursor-pointer"
+                className="w-full sm:w-auto min-w-[280px] bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black text-sm sm:text-base py-3.5 px-8 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
                 </svg>
-                <span>Get WhatsApp Quote</span>
+                <span>Get Instant Quote on WhatsApp</span>
+                <ArrowRight size={18} />
               </button>
             </div>
           </form>
