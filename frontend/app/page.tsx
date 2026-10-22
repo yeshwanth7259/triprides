@@ -1,12 +1,32 @@
 'use client';
+
+import React, { useState } from 'react';
 import Link from 'next/link';
-import { MapPin, Users, Plane, Car, Bus, Map, Clock, CheckCircle, Clock3, FileText, Send, Download, Mail, Calendar } from 'lucide-react';
-import { useState } from 'react';
+import { 
+  MapPin, Users, Plane, Car, Bus, Map, Clock, CheckCircle, 
+  FileText, Send, Download, Mail, Calendar, Ticket, Phone, ArrowRight, ShieldCheck 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  CONTACT_PHONE, 
+  CONTACT_PHONE_TEL, 
+  CONTACT_PHONE_WA, 
+  FLEET_DATA, 
+  VEHICLE_CATEGORIES_CONFIG 
+} from '../lib/fleetData';
+import { useBookingModal } from '../components/BookingModalContext';
 
 export default function Home() {
+  const { openBookingModal } = useBookingModal();
   const [activeTab, setActiveTab] = useState('tempo');
-  const [form, setForm] = useState({ pickup: '', destination: '', date: '', time: '', passengers: '', vehicleInfo: '' });
+  const [form, setForm] = useState({ 
+    pickup: '', 
+    destination: '', 
+    date: '', 
+    time: '06:00', 
+    passengers: '12', 
+    vehicleInfo: '12 Seater AC Tempo Traveller' 
+  });
   const [quoteStatus, setQuoteStatus] = useState<'idle' | 'generating' | 'done'>('idle');
 
   const karnatakaLocations = [
@@ -16,129 +36,201 @@ export default function Home() {
     "Ooty", "Wayanad", "Munnar", "Kochi", "Chennai", "Hyderabad", "Goa", "Tirupati", "Nandi Hills"
   ];
 
-  const getEstimatedPrice = () => {
-    const vehicle = form.vehicleInfo || vehicleOptions[activeTab][0];
-    const rates: any = {
-      'Hatchback (4 Seats)': [2000, 2500],
-      'Sedan (4 Seats)': [2500, 3000],
-      'SUV (6 Seats)': [3500, 4000],
-      'Innova (6 Seats)': [4000, 4500],
-      'Innova Crysta (7 Seats)': [4500, 5000],
-      '12 Seater Tempo Traveller': [6500, 7000],
-      '14 Seater Tempo Traveller': [7000, 7500],
-      '17 Seater Tempo Traveller': [7500, 8000],
-      '20 Seater Tempo Traveller': [8000, 8500],
-      '21 Seater Mini Bus': [8500, 9500],
-      '25 Seater Mini Bus': [10000, 12000],
-      '30 Seater Bus': [12000, 14000],
-      '35 Seater Bus': [14000, 16000],
-      '40 Seater Bus': [16000, 18000],
-      '50 Seater Bus': [20000, 24000]
-    };
-    const rate = rates[vehicle] || [3000, 4000];
-    return `₹${rate[0].toLocaleString()} - ₹${rate[1].toLocaleString()}`;
-  };
-
   const tabs = [
-    { id: 'tempo', label: 'Tempo Traveller', icon: <Users size={14} /> },
-    { id: 'minibus', label: 'Mini Bus', icon: <Bus size={14} /> },
-    { id: 'bus', label: 'Bus', icon: <Bus size={14} /> },
-    { id: 'outstation', label: 'Outstation', icon: <Map size={14} /> },
-    { id: 'cars', label: 'Cars', icon: <Car size={14} /> },
-    { id: 'airport', label: 'Airport Taxi', icon: <Plane size={14} /> },
+    { id: 'cab', label: 'Cabs (4–7 Seats)', icon: <Car size={16} /> },
+    { id: 'tempo', label: 'Tempo Traveller (8–20)', icon: <Users size={16} /> },
+    { id: 'minibus', label: 'Mini Bus (12–25)', icon: <Bus size={16} /> },
+    { id: 'bus', label: 'Coach Bus (27–50)', icon: <Bus size={16} /> },
+    { id: 'airport', label: 'Airport Taxi', icon: <Plane size={16} /> },
   ];
 
-  const vehicleOptions: any = {
-    'tempo': ['12 Seater Tempo Traveller', '14 Seater Tempo Traveller', '17 Seater Tempo Traveller', '20 Seater Tempo Traveller'],
-    'minibus': ['21 Seater Mini Bus', '25 Seater Mini Bus'],
-    'bus': ['30 Seater Bus', '35 Seater Bus', '40 Seater Bus', '50 Seater Bus'],
-    'outstation': ['Sedan (4 Seats)', 'SUV (6 Seats)', 'Innova Crysta (7 Seats)', 'Tempo Traveller (12+ Seats)'],
-    'cars': ['Hatchback (4 Seats)', 'Sedan (4 Seats)', 'SUV (6 Seats)', 'Innova (6 Seats)'],
-    'airport': ['Sedan (4 Seats)', 'SUV (6 Seats)', 'Innova Crysta (7 Seats)']
+  const vehicleOptions: Record<string, string[]> = {
+    'cab': [
+      'Sedan (Swift Dzire / Etios) - 4 Seats',
+      'Maruti Ertiga SUV - 6 Seats',
+      'Toyota Innova Crysta - 7 Seats'
+    ],
+    'tempo': [
+      '9/10 Seater Maharaja Luxury TT',
+      '12 Seater AC Tempo Traveller',
+      '14 Seater Premium Tempo Traveller',
+      '17 Seater AC Tempo Traveller',
+      '20 Seater AC Tempo Traveller'
+    ],
+    'minibus': [
+      '21 Seater AC Mini Bus',
+      '25 Seater Luxury AC Mini Bus'
+    ],
+    'bus': [
+      '32 Seater Pushback Coach Bus',
+      '40 Seater Deluxe Pushback Bus',
+      '50 Seater Standard Coach Bus'
+    ],
+    'airport': [
+      'Sedan (Dzire / Etios) BLR Transfer',
+      'Innova Crysta BLR Transfer',
+      '12 Seater Tempo BLR Transfer'
+    ]
   };
 
-  async function generateQuote(e: any) {
+  const getEstimatedPrice = () => {
+    const selected = form.vehicleInfo || vehicleOptions[activeTab]?.[0] || '';
+    if (selected.includes('Sedan')) return '₹13/km (Local: ₹1,800)';
+    if (selected.includes('Ertiga')) return '₹17/km (Local: ₹2,400)';
+    if (selected.includes('Innova')) return '₹22/km (Local: ₹3,200)';
+    if (selected.includes('9/10')) return '₹24/km (Local: ₹4,000)';
+    if (selected.includes('12 Seater')) return '₹22/km (Local: ₹3,800)';
+    if (selected.includes('14 Seater')) return '₹24/km (Local: ₹4,200)';
+    if (selected.includes('17 Seater')) return '₹26/km (Local: ₹4,600)';
+    if (selected.includes('20 Seater')) return '₹28/km (Local: ₹5,000)';
+    if (selected.includes('21 Seater')) return '₹32/km (Local: ₹6,500)';
+    if (selected.includes('25 Seater')) return '₹36/km (Local: ₹7,500)';
+    if (selected.includes('32 Seater')) return '₹42/km (Local: ₹9,000)';
+    if (selected.includes('40 Seater')) return '₹48/km (Local: ₹10,500)';
+    if (selected.includes('50 Seater')) return '₹54/km (Local: ₹12,000)';
+    return '₹22 - ₹28 / km';
+  };
+
+  async function generateQuote(e: React.FormEvent) {
     e.preventDefault();
     setQuoteStatus('generating');
     setTimeout(() => {
       setQuoteStatus('done');
-    }, 2000);
+    }, 1000);
   }
 
   function sendToWhatsApp() {
-    const details = `*BookMyRoute Official Quote* 🚕
------------------------
+    const details = `*🚕 BookMyRoute Official Trip Quotation Request*
+----------------------------------------
 *Category:* ${tabs.find(t => t.id === activeTab)?.label}
-*Vehicle Needed:* ${form.vehicleInfo || vehicleOptions[activeTab][0]}
-*Passengers:* ${form.passengers || 'Not specified'}
-*Route:* ${form.pickup} to ${form.destination}
-*Date:* ${form.date}
-*Time:* ${form.time}
------------------------
-*Estimated Fare (Per Day):* ${getEstimatedPrice()}
-_Please confirm your booking._`;
-    window.open(`https://wa.me/917259335286?text=${encodeURIComponent(details)}`, '_blank');
+*Vehicle Selected:* ${form.vehicleInfo || vehicleOptions[activeTab][0]}
+*Passengers:* ${form.passengers || 'Standard capacity'}
+*Route:* ${form.pickup || 'Bengaluru'} to ${form.destination || 'Karnataka'}
+*Travel Date:* ${form.date} at ${form.time}
+*Estimated Pricing:* ${getEstimatedPrice()}
+----------------------------------------
+_Please send me the formal quotation and confirm vehicle booking._`;
+
+    // Save lead in backend
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Website Visitor',
+        phone: CONTACT_PHONE,
+        service: `${form.vehicleInfo || 'Vehicle Booking'}`,
+        pickup: form.pickup || 'Bangalore',
+        destination: form.destination || 'Karnataka',
+        travel_date: form.date || new Date().toISOString().split('T')[0],
+        passengers: Number(form.passengers) || 4
+      })
+    }).catch(() => {});
+
+    window.open(`https://wa.me/${CONTACT_PHONE_WA}?text=${encodeURIComponent(details)}`, '_blank');
   }
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] overflow-hidden">
+    <main className="min-h-screen bg-[#F9FAFB] overflow-hidden pb-16">
       {/* Hero Section */}
-      <section className="relative h-[400px] md:h-[550px] mt-[72px] overflow-hidden bg-[#0F355C]">
-        {/* Animated Banner Background */}
+      <section className="relative h-[440px] md:h-[580px] mt-[72px] overflow-hidden bg-[#0F355C]">
         <motion.div
-          initial={{ scale: 1.1, opacity: 0 }}
+          initial={{ scale: 1.08, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1.5, ease: [0.25, 1, 0.5, 1] }}
-          className="absolute inset-0 bg-cover bg-left-top md:bg-[center_top] bg-no-repeat"
+          className="absolute inset-0 bg-cover bg-left-top md:bg-[center_top] bg-no-repeat opacity-40 mix-blend-overlay"
           style={{ backgroundImage: 'url("/banner.png")' }}
         />
 
-        {/* Subtle bottom gradient to blend with the page */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0F355C] via-[#0F355C]/80 to-transparent"></div>
         <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#F9FAFB] to-transparent"></div>
 
-        {/* Visually hidden H1 for SEO */}
-        <h1 className="sr-only">Book Taxi, Cars, Tempo Traveller, Mini Buses & Buses Across Karnataka</h1>
+        <div className="container-x relative z-10 pt-16 md:pt-24 max-w-4xl">
+          <div className="inline-flex items-center gap-2 bg-[#FF7020] text-white text-xs font-black px-3.5 py-1.5 rounded-full mb-4 uppercase tracking-wider shadow-sm">
+            <span>⭐</span> Karnataka's #1 Fleet Rental Partner
+          </div>
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-display text-white tracking-tight leading-[1.15] mb-4 drop-shadow-md">
+            Cab, Tempo Traveller & Bus Rental in Bangalore
+          </h1>
+          <p className="text-blue-100 text-base sm:text-lg max-w-2xl font-medium leading-relaxed drop-shadow-sm mb-6">
+            Rent pristine Cabs (4–7 Seats), Tempo Travellers (8–20 Seats), Mini Buses (12–25 Seats), and Tourist Buses (27–50 Seats) at transparent per-kilometer rates.
+          </p>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => openBookingModal()}
+              className="bg-[#FF7020] hover:bg-[#e55c0c] text-white font-black px-7 py-3.5 rounded-xl shadow-lg transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer"
+            >
+              <Ticket size={18} />
+              <span>Book Your Trip Now</span>
+            </button>
+            <Link
+              href="/pricing"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-3.5 rounded-xl backdrop-blur-md border border-white/20 transition-all flex items-center gap-2"
+            >
+              <span>View Pricing Matrix</span>
+              <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
       </section>
 
-      {/* Search Card */}
-      <div className="container-x relative -mt-[180px] md:-mt-[120px] z-20 mb-16">
+      {/* Tejas Travels Search Card */}
+      <div className="container-x relative -mt-[140px] md:-mt-[110px] z-20 mb-16">
         <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
+          initial={{ opacity: 0, y: 40, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.3, type: "spring", bounce: 0.4 }}
-          className="bg-white rounded-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.15)] overflow-hidden border border-slate-100"
+          transition={{ duration: 0.7, delay: 0.2 }}
+          className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] overflow-hidden border border-slate-100"
         >
           {/* Form Header */}
-          <div className="bg-slate-50 border-b border-slate-200 p-6 md:px-10 text-center md:text-left">
-            <h2 className="text-xl md:text-2xl font-black text-[#0A3D73] font-display">Where would you like to travel?</h2>
-            <p className="text-slate-500 text-sm font-medium mt-1">Get an instant, transparent quote for your journey.</p>
+          <div className="bg-slate-50 border-b border-slate-200 p-6 md:px-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
+            <div>
+              <h2 className="text-xl md:text-2xl font-black text-[#0A3D73] font-display">
+                Where would you like to travel?
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">
+                Instant quotes sent straight to WhatsApp ({CONTACT_PHONE})
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => openBookingModal({ category: activeTab as any })}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-black text-[#0A3D73] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              <Ticket size={14} /> Open Full Booking Modal →
+            </button>
           </div>
+
           {/* Tabs */}
-          <div className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar">
+          <div className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar bg-white">
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setForm({ ...form, vehicleInfo: vehicleOptions[tab.id][0] }); }}
-                className={`flex items-center gap-2 whitespace-nowrap px-8 py-5 font-bold text-[14px] transition-colors ${activeTab === tab.id
-                    ? 'bg-[#0F355C] text-white'
-                    : 'text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-50'
-                  }`}
+                onClick={() => { 
+                  setActiveTab(tab.id); 
+                  setForm({ ...form, vehicleInfo: vehicleOptions[tab.id]?.[0] || '' }); 
+                }}
+                className={`flex items-center gap-2 whitespace-nowrap px-6 sm:px-8 py-4 font-bold text-xs sm:text-sm transition-colors cursor-pointer ${
+                  activeTab === tab.id
+                    ? 'bg-[#0A3D73] text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                }`}
               >
                 {tab.icon} {tab.label}
               </button>
             ))}
           </div>
 
-          <form onSubmit={generateQuote} className="p-8 md:p-10">
-            <div className="grid md:grid-cols-2 gap-6 items-end mb-6">
+          <form onSubmit={generateQuote} className="p-6 sm:p-10">
+            <div className="grid md:grid-cols-2 gap-5 mb-5">
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pickup Location</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
-                  <MapPin className="ml-4 text-red-500" size={18} />
+                <div className="relative border rounded-xl border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0A3D73] transition-colors">
+                  <MapPin className="ml-4 text-[#FF7020]" size={18} />
                   <input
                     required
                     list="locations"
-                    placeholder="e.g. Bengaluru Airport"
+                    placeholder="e.g. Uttharhalli / Bangalore Airport"
                     className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
                     value={form.pickup}
                     onChange={e => setForm({ ...form, pickup: e.target.value })}
@@ -147,13 +239,13 @@ _Please confirm your booking._`;
               </div>
 
               <div className="relative">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Drop Location</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
-                  <MapPin className="ml-4 text-[#0F355C]" size={18} />
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Drop Location / Destination</label>
+                <div className="relative border rounded-xl border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0A3D73] transition-colors">
+                  <MapPin className="ml-4 text-[#0A3D73]" size={18} />
                   <input
                     required
                     list="locations"
-                    placeholder="e.g. Mysore / Coorg"
+                    placeholder="e.g. Mysore / Coorg / Ooty"
                     className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
                     value={form.destination}
                     onChange={e => setForm({ ...form, destination: e.target.value })}
@@ -166,14 +258,14 @@ _Please confirm your booking._`;
               {karnatakaLocations.map(loc => <option key={loc} value={loc} />)}
             </datalist>
 
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6 items-end">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 items-end">
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Travel Date</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
                   <input
                     type="date"
                     required
-                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
                     value={form.date}
                     onChange={e => setForm({ ...form, date: e.target.value })}
                   />
@@ -182,11 +274,11 @@ _Please confirm your booking._`;
 
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Time</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
                   <input
                     type="time"
                     required
-                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
                     value={form.time}
                     onChange={e => setForm({ ...form, time: e.target.value })}
                   />
@@ -195,13 +287,13 @@ _Please confirm your booking._`;
 
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Passengers</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
                   <input
                     type="number"
                     min="1"
                     placeholder="Count"
                     required
-                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
                     value={form.passengers}
                     onChange={e => setForm({ ...form, passengers: e.target.value })}
                   />
@@ -209,32 +301,29 @@ _Please confirm your booking._`;
               </div>
 
               <div className="relative col-span-2 md:col-span-1">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Vehicle Type</label>
-                <div className="relative border rounded-lg border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0F355C] transition-colors">
-                  <Users className="ml-4 text-[#0F355C] absolute pointer-events-none" size={16} />
+                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Vehicle Model</label>
+                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] transition-colors">
                   <select
-                    className="w-full bg-transparent pl-12 pr-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px] appearance-none cursor-pointer"
+                    className="w-full bg-transparent px-3 py-3 outline-none text-slate-800 font-semibold text-xs appearance-none cursor-pointer"
                     value={form.vehicleInfo}
                     onChange={e => setForm({ ...form, vehicleInfo: e.target.value })}
                   >
-                    <option value="" disabled>Select vehicle...</option>
                     {vehicleOptions[activeTab]?.map((opt: string) => (
                       <option key={opt} value={opt}>{opt}</option>
                     ))}
                   </select>
-                  <div className="absolute right-4 pointer-events-none">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-slate-400"><path d="M6 9l6 6 6-6" /></svg>
+                  <div className="absolute right-3 pointer-events-none text-slate-400">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M6 9l6 6 6-6" /></svg>
                   </div>
                 </div>
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="bg-[#FF7020] hover:bg-[#E55C0C] text-white font-bold py-3.5 px-6 rounded-lg transition-colors w-full h-[52px] shadow-sm flex items-center justify-center gap-2 col-span-2 md:col-span-1"
+              <button
+                type="submit"
+                className="bg-[#FF7020] hover:bg-[#E55c0c] text-white font-black py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 col-span-2 md:col-span-1 h-[48px] cursor-pointer"
               >
                 <FileText size={18} /> Get Quote
-              </motion.button>
+              </button>
             </div>
           </form>
 
@@ -248,47 +337,54 @@ _Please confirm your booking._`;
               >
                 {quoteStatus === 'generating' ? (
                   <div className="p-8 flex flex-col items-center justify-center text-slate-500">
-                    <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0F355C] rounded-full animate-spin mb-4"></div>
-                    <p className="font-bold">Generating your custom quotation...</p>
+                    <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0A3D73] rounded-full animate-spin mb-3"></div>
+                    <p className="font-bold text-sm">Calculating transparent fare estimation...</p>
                   </div>
                 ) : (
-                  <div className="p-8">
-                    <div className="bg-white p-6 rounded-xl border border-[#0A3D73]/20 shadow-sm mb-6 relative overflow-hidden">
-                      <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">Quote Ready</div>
-                      <h3 className="text-xl font-black text-[#0A3D73] mb-4 border-b pb-4">Estimated Quotation</h3>
+                  <div className="p-6 sm:p-8">
+                    <div className="bg-white p-6 rounded-2xl border border-[#0A3D73]/20 shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-black px-3.5 py-1 rounded-bl-xl">
+                        Quote Ready
+                      </div>
+                      <h3 className="text-lg font-black text-[#0A3D73] mb-4 border-b border-slate-100 pb-3">
+                        Instant Fare Quotation
+                      </h3>
 
                       <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Vehicle</p>
-                          <p className="font-semibold text-slate-800">{tabs.find(t => t.id === activeTab)?.label}</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Vehicle Type</p>
+                          <p className="font-bold text-slate-800 text-sm">{form.vehicleInfo || vehicleOptions[activeTab][0]}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Route</p>
-                          <p className="font-semibold text-slate-800">{form.pickup} to {form.destination}</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Route</p>
+                          <p className="font-bold text-slate-800 text-sm">{form.pickup || 'Bangalore'} → {form.destination || 'Karnataka'}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Date & Time</p>
-                          <p className="font-semibold text-slate-800">{form.date}, {form.time}</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Schedule</p>
+                          <p className="font-bold text-slate-800 text-sm">{form.date || 'Upcoming'}, {form.time}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Passengers</p>
-                          <p className="font-semibold text-slate-800">{form.passengers}</p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Passengers</p>
+                          <p className="font-bold text-slate-800 text-sm">{form.passengers}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-slate-500 font-bold uppercase">Est. Price/Day</p>
-                          <p className="font-black text-2xl text-[#FF7020]">{getEstimatedPrice().split('-')[0]} <span className="text-sm font-medium text-slate-500">-{getEstimatedPrice().split('-')[1]}</span></p>
+                          <p className="text-[11px] text-slate-400 font-bold uppercase">Estimated Rate</p>
+                          <p className="font-black text-xl text-[#FF7020]">{getEstimatedPrice()}</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-col md:flex-row gap-4 mt-6">
-                        <button onClick={sendToWhatsApp} className="flex-1 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                          <Send size={18} /> Send Quote to WhatsApp
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <button 
+                          onClick={sendToWhatsApp} 
+                          className="flex-1 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+                        >
+                          <Send size={18} /> Send Quote to WhatsApp (+91 73531 87804)
                         </button>
-                        <button className="flex-1 bg-[#0A3D73] hover:bg-[#082f59] text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                          <Mail size={18} /> Email Quote to Me
-                        </button>
-                        <button className="flex-1 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                          <Download size={18} /> Download PDF
+                        <button
+                          onClick={() => openBookingModal({ category: activeTab as any })}
+                          className="flex-1 bg-[#0A3D73] hover:bg-[#072d54] text-white font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
+                        >
+                          <Ticket size={18} /> Complete Online Booking
                         </button>
                       </div>
                     </div>
@@ -300,207 +396,177 @@ _Please confirm your booking._`;
         </motion.div>
       </div>
 
-      {/* About Us Highlights */}
-      <section className="container-x py-16 mb-8 mt-10">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-black font-display text-[#0F355C] mb-6 leading-[1.2]">
-              Karnataka's Most Trusted <br /><span className="text-[#FF7020]">Travel Partner</span>
-            </h2>
-            <p className="text-slate-600 text-lg mb-8 leading-relaxed">
-              Whether you are planning a corporate outing, a family vacation, or a quick airport transfer, BookMyRoute provides top-class, well-maintained vehicles with professional drivers to ensure your journey is safe, comfortable, and highly memorable.
-            </p>
-            <div className="flex flex-col gap-4">
-              {[
-                "Well-maintained, clean, and sanitized fleet",
-                "Professional, highly experienced route drivers",
-                "Transparent pricing with zero hidden charges",
-                "24/7 dedicated customer support for your peace of mind"
-              ].map((text, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="bg-[#5CC13A]/20 text-[#5CC13A] rounded-full p-1"><CheckCircle size={16} /></div>
-                  <span className="text-slate-700 font-bold">{text}</span>
+      {/* Fleet Categories Highlight */}
+      <section className="container-x py-12 mb-12">
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <span className="text-xs font-black uppercase tracking-wider text-[#FF7020]">Karnataka's Largest Fleet</span>
+          <h2 className="text-3xl md:text-4xl font-black text-[#0A3D73] font-display mt-1">
+            Choose Your Travel Category
+          </h2>
+          <p className="text-slate-500 text-sm sm:text-base mt-2">
+            Pristine condition, pushback seats, and verified commercial drivers for every group size.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              id: 'cab',
+              name: 'Cabs & Sedans',
+              seats: '4–7 Seats',
+              image: '/vehicles/Toyota innova.webp',
+              price: 'From ₹13 / km',
+              desc: 'Swift Dzire, Etios, Maruti Ertiga & Toyota Innova Crysta for city & highway tours.'
+            },
+            {
+              id: 'tempo',
+              name: 'Tempo Travellers',
+              seats: '8–20 Seats',
+              image: '/vehicles/tempo-traveller-17.jpg',
+              price: 'From ₹22 / km',
+              desc: '9S Maharaja, 12S, 14S, 17S and 20S pushback AC tempo travellers for family & corporate.'
+            },
+            {
+              id: 'minibus',
+              name: 'Mini Buses',
+              seats: '12–25 Seats',
+              image: '/vehicles/21seater-bus.webp',
+              price: 'From ₹32 / km',
+              desc: '21 and 25-seater luxury AC mini buses with underbelly luggage holds and panoramic views.'
+            },
+            {
+              id: 'bus',
+              name: 'Coach Buses',
+              seats: '27–50 Seats',
+              image: '/vehicles/coach-bus-40.jpg',
+              price: 'From ₹42 / km',
+              desc: '32, 40 and 50-seater pushback tourist buses for weddings, conventions & pilgrimages.'
+            }
+          ].map((item) => (
+            <div 
+              key={item.id}
+              className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl transition-all flex flex-col group"
+            >
+              <div className="h-48 overflow-hidden relative bg-slate-100">
+                <img 
+                  src={item.image} 
+                  alt={item.name} 
+                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500" 
+                />
+                <div className="absolute top-3 left-3 bg-white/95 px-3 py-1 rounded-lg text-xs font-black text-[#0A3D73]">
+                  {item.seats}
                 </div>
-              ))}
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            className="relative h-[400px] rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(15,53,92,0.15)] border-4 border-white"
-          >
-            <img src="/banner.png" alt="BookMyRoute Fleet" className="w-full h-full object-cover object-left-top md:object-[center_top]" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0F355C]/90 via-[#0F355C]/40 to-transparent flex items-end p-8">
-              <div className="text-white">
-                <h3 className="font-black text-3xl mb-2 flex items-center gap-2"><MapPin className="text-[#FF7020]" /> Across Karnataka</h3>
-                <p className="text-blue-100 font-medium">Providing premium travel services everywhere.</p>
+                <div className="absolute top-3 right-3 bg-[#FF7020] text-white px-2.5 py-1 rounded-lg text-xs font-black">
+                  {item.price}
+                </div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col">
+                <h3 className="font-black text-lg text-slate-900 mb-1">{item.name}</h3>
+                <p className="text-slate-500 text-xs leading-relaxed mb-4 flex-1">{item.desc}</p>
+                
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => openBookingModal({ category: item.id as any })}
+                    className="flex-1 bg-[#0A3D73] hover:bg-[#072d54] text-white font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                  >
+                    Book Now
+                  </button>
+                  <Link
+                    href="/vehicles"
+                    className="px-3.5 py-2.5 border border-slate-200 hover:border-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors flex items-center justify-center"
+                  >
+                    Fleet →
+                  </Link>
+                </div>
               </div>
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Scrolling Services Card Section */}
-      <section className="bg-[#0A3D73] py-20 relative overflow-hidden">
-        {/* Background Accent */}
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-[#0F355C] rounded-l-full blur-3xl opacity-50"></div>
-
-        <div className="container-x mb-12 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="flex flex-col md:flex-row justify-between items-end gap-4"
-          >
-            <div>
-              <h2 className="text-[32px] font-black font-display text-white mb-3 tracking-tight">Our Premium Fleet</h2>
-              <p className="text-blue-200 text-lg">Swipe to explore the perfect vehicle for your group size and destination.</p>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Horizontal Scrolling Wrapper */}
-        <div className="pl-4 md:pl-12 flex gap-6 overflow-x-auto hide-scrollbar pb-8 relative z-10 pt-4">
-          {[
-            { name: 'Tempo Traveller', desc: '12 to 20 Seater Premium AC', icon: <Users size={36} className="text-[#FF7020]" /> },
-            { name: 'Mini Bus', desc: '21 to 25 Seater Luxury AC', icon: <Bus size={36} className="text-[#FF7020]" /> },
-            { name: 'Bus On Rent', desc: '30 to 50 Seater Pushback AC', icon: <Bus size={36} className="text-[#FF7020]" /> },
-            { name: 'Outstation Cars', desc: 'Sedans & SUVs for Long Trips', icon: <Map size={36} className="text-[#FF7020]" /> },
-            { name: 'Airport Taxi', desc: 'Reliable Drop & Pickup', icon: <Plane size={36} className="text-[#FF7020]" /> }
-          ].map((srv, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.15, type: "spring", stiffness: 100 }}
-              whileHover={{ y: -10, scale: 1.02 }}
-              className="bg-white rounded-3xl p-8 min-w-[300px] md:min-w-[340px] shadow-xl transition-all cursor-pointer group border-b-4 border-transparent hover:border-[#FF7020] hover:shadow-2xl"
-            >
-              <motion.div 
-                whileHover={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 0.5 }}
-                className="bg-orange-50 w-20 h-20 rounded-2xl flex items-center justify-center mb-8 shadow-sm"
-              >
-                {srv.icon}
-              </motion.div>
-              <h3 className="text-2xl font-black text-[#0A3D73] mb-3 font-display group-hover:text-[#FF7020] transition-colors">{srv.name}</h3>
-              <p className="text-slate-500 mb-8 font-medium">{srv.desc}</p>
-              <Link href="/vehicles" className="text-[#FF7020] font-bold flex items-center gap-2 group-hover:translate-x-2 transition-transform">
-                Explore Vehicle <span className="text-xl">→</span>
-              </Link>
-            </motion.div>
           ))}
-          {/* Spacing element at end of scroll */}
-          <div className="min-w-[20px] md:min-w-[40px]"></div>
-        </div>
-
-        {/* WhatsApp Enquiry Button */}
-        <div className="flex justify-center mt-8 relative z-10">
-           <a href="https://wa.me/917259335286" target="_blank" className="bg-[#25D366] hover:bg-[#1ebd5a] text-white font-bold py-4 px-10 rounded-full flex items-center gap-3 transition-transform hover:scale-105 shadow-[0_10px_30px_rgba(37,211,102,0.3)]">
-             <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-             </svg>
-             Enquiry for More Info
-           </a>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="bg-white py-16 border-y border-slate-200">
+      {/* Trust Highlights */}
+      <section className="bg-slate-100/70 py-16 border-y border-slate-200">
         <div className="container-x">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center max-w-2xl mx-auto mb-12"
-          >
-            <h2 className="text-[28px] md:text-3xl font-black font-display text-[#0A3D73] mb-4">What Our Travelers Say</h2>
-            <p className="text-slate-500">Trusted by thousands of happy customers across Karnataka for safe, reliable, and comfortable journeys.</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Rahul S.", text: "Booked a 14 seater Tempo Traveller for a family trip to Coorg. The vehicle was spotless, driver was very professional, and we had an amazing time!", rating: 5, trip: "Bangalore to Coorg" },
-              { name: "Priya M.", text: "Excellent service! We rented a mini bus for our corporate outing. The entire process from booking to the actual trip was seamless and completely transparent.", rating: 5, trip: "Corporate Outing" },
-              { name: "Amit K.", text: "I regularly use BookMyRoute for airport transfers. They are always on time, the cars are clean, and the pricing is very reasonable compared to others.", rating: 4, trip: "Airport Transfer" }
-            ].map((review, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ delay: i * 0.2, type: "spring", bounce: 0.4 }}
-                whileHover={{ y: -8, boxShadow: "0 20px 40px -15px rgba(0,0,0,0.1)" }}
-                className="bg-slate-50 rounded-2xl p-8 border border-slate-100 relative transition-all"
-              >
-                <div className="flex gap-1 mb-4 text-[#FF7020]">
-                  {[...Array(review.rating)].map((_, idx) => <motion.svg initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 + (idx * 0.1) }} key={idx} width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></motion.svg>)}
-                </div>
-                <p className="text-slate-700 italic mb-6">"{review.text}"</p>
-                <div className="flex items-center gap-4 mt-auto">
-                  <div className="w-10 h-10 bg-[#0A3D73] rounded-full flex items-center justify-center text-white font-bold shadow-md">{review.name.charAt(0)}</div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{review.name}</h4>
-                    <p className="text-xs text-slate-500">{review.trip}</p>
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider text-[#FF7020]">Safe & Reliable</span>
+              <h2 className="text-3xl md:text-4xl font-black font-display text-[#0A3D73] mt-1 mb-5">
+                Karnataka's Most Trusted Travel Partner
+              </h2>
+              <p className="text-slate-600 text-base leading-relaxed mb-6">
+                Whether you need an airport transfer to Kempegowda International Airport (BLR), a weekend getaway to Coorg or Ooty, or corporate conference buses, BookMyRoute delivers spotless vehicles with verified route drivers.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  "Police-Verified Route Drivers",
+                  "24/7 GPS Tracking on All Vehicles",
+                  "100% Transparent Billing & GST",
+                  "Zero Hidden Driver Allowance"
+                ].map((text, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800">
+                    <CheckCircle size={16} className="text-[#5CC13A] shrink-0" />
+                    <span>{text}</span>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-[#0A3D73] to-[#0F355C] text-white p-8 sm:p-10 rounded-3xl shadow-xl space-y-5">
+              <span className="bg-[#FF7020] text-white text-[11px] font-black px-3 py-1 rounded-full uppercase">Instant Quotation</span>
+              <h3 className="text-2xl sm:text-3xl font-black font-display">Need a custom itinerary quote?</h3>
+              <p className="text-blue-100 text-sm leading-relaxed">
+                Connect directly with our dispatch manager on WhatsApp for immediate vehicle availability, corporate packages, and customized trip rates.
+              </p>
+
+              <div className="pt-2">
+                <a
+                  href={`https://wa.me/${CONTACT_PHONE_WA}?text=Hi,%20I%20am%20looking%20for%20a%20vehicle%20quote%20for%20my%20trip.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black px-6 py-3.5 rounded-xl shadow-lg transition-transform hover:scale-102"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                  </svg>
+                  <span>Chat on WhatsApp: {CONTACT_PHONE}</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* FAQs */}
-      <section className="container-x py-20 mb-10">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-[28px] font-black font-display text-[#0F355C] mb-10 text-center"
-        >
+      {/* Customer FAQs */}
+      <section className="container-x py-16">
+        <h2 className="text-2xl sm:text-3xl font-black font-display text-[#0A3D73] mb-8 text-center">
           Frequently Asked Questions
-        </motion.h2>
+        </h2>
 
-        <div className="max-w-3xl mx-auto flex flex-col gap-4">
+        <div className="max-w-3xl mx-auto space-y-3 text-sm">
           {[
-            { q: "How are the outstation trip charges calculated?", a: "Outstation trips are calculated based on a minimum of 300 KMs per day. The total cost includes the per KM rate of your chosen vehicle, plus a daily driver allowance. Tolls, parking, and state taxes are extra." },
-            { q: "Do I need to pay an advance to confirm my booking?", a: "Yes, we require a nominal advance payment (usually 10-20%) to block the vehicle for your dates. The remaining balance can be paid directly to the driver during your trip." },
-            { q: "Are your vehicles air-conditioned?", a: "Yes! All our vehicles, including Cars, Tempo Travellers, and Mini Buses, come with fully functional AC to ensure a comfortable journey." },
-            { q: "What happens if the vehicle breaks down during the trip?", a: "We maintain our fleet strictly, but in the rare event of a breakdown, we provide a replacement vehicle at the earliest possible time to ensure your trip continues smoothly." },
-            { q: "Can I book a vehicle for a local city tour?", a: "Absolutely! We offer 8 Hour / 80 KM packages for local city tours in Bangalore. Any extra hours or KMs are charged at standard rates." }
+            {
+              q: "How are outstation trip fares calculated?",
+              a: "Outstation trips are calculated based on a minimum of 300 KMs per day. The total is: (Actual or Min KMs × Vehicle Per KM Rate) + Daily Driver Bata. Tolls, state taxes, and parking are extra as per actual receipts."
+            },
+            {
+              q: "What types of buses are available for rent?",
+              a: "We provide 21 to 25-seater Mini Buses and 32, 40, and 50-seater Pushback Coaches. We strictly operate pushback seating tour buses (we do not operate sleeper buses or luxury multi-axle buses)."
+            },
+            {
+              q: "How do I confirm my booking on WhatsApp?",
+              a: `Click any 'Book Now' or 'WhatsApp Quote' button. Your itinerary details will automatically open on WhatsApp to ${CONTACT_PHONE}. Our dispatch team will verify vehicle availability and confirm your ride instantly.`
+            },
+            {
+              q: "Are the vehicles air-conditioned?",
+              a: "Yes, all our Cabs, Tempo Travellers, Mini Buses, and Coaches come equipped with high-power AC systems to keep all passengers cool throughout the journey."
+            }
           ].map((faq, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ delay: i * 0.15, type: "spring" }}
-              whileHover={{ scale: 1.02 }}
-              className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-lg hover:border-[#FF7020]/30 transition-all cursor-pointer group"
-            >
-              <h4 className="font-bold text-slate-800 text-lg group-hover:text-[#0A3D73] transition-colors flex justify-between items-center">
-                {faq.q}
-                <motion.span 
-                  className="text-[#FF7020] text-xl bg-orange-50 w-8 h-8 rounded-full flex items-center justify-center"
-                  whileHover={{ rotate: 90 }}
-                >
-                  +
-                </motion.span>
-              </h4>
-              <motion.div 
-                initial={{ height: 0, opacity: 0 }}
-                whileHover={{ height: "auto", opacity: 1 }}
-                className="overflow-hidden"
-              >
-                <p className="text-slate-500 mt-4 text-sm leading-relaxed">{faq.a}</p>
-              </motion.div>
-            </motion.div>
+            <div key={i} className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
+              <h4 className="font-bold text-slate-800 text-base mb-2">{faq.q}</h4>
+              <p className="text-slate-500 leading-relaxed">{faq.a}</p>
+            </div>
           ))}
         </div>
       </section>

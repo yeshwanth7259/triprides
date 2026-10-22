@@ -4,14 +4,16 @@ import Script from 'next/script';
 import './globals.css';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import FloatingActions from '../components/FloatingActions';
+import { BookingModalProvider } from '../components/BookingModalContext';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
-  title: 'BookMyRoute | Every Ride. Every Trip. One Place.',
-  description: 'Taxi, airport transfers, cars, tempo travellers, mini buses and buses across Karnataka.',
+  title: 'BookMyRoute | Cab, Tempo Traveller, Mini Bus & Bus Rental Bangalore',
+  description: 'Book Cabs (4-7 seats), Tempo Travellers (8-20 seats), Mini Buses (21-25 seats) and Coach Buses (32-50 seats) across Karnataka. Instant WhatsApp quotes: +91 73531 87804.',
 };
 
 export default function RootLayout({
@@ -37,9 +39,14 @@ export default function RootLayout({
             gtag('config', 'AW-18530500425');
           `}
         </Script>
-        <Header />
-        {children}
-        <Footer />
+        
+        <BookingModalProvider>
+          <Header />
+          {children}
+          <Footer />
+          <FloatingActions />
+        </BookingModalProvider>
+        
         <SpeedInsights />
       </body>
     </html>
