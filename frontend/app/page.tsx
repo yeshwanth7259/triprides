@@ -27,7 +27,6 @@ export default function Home() {
     passengers: '12', 
     vehicleInfo: '12 Seater AC Tempo Traveller' 
   });
-  const [quoteStatus, setQuoteStatus] = useState<'idle' | 'generating' | 'done'>('idle');
 
   const karnatakaLocations = [
     "Bengaluru", "Kempegowda International Airport (BLR)", "Mysore", "Coorg (Madikeri)", 
@@ -91,38 +90,44 @@ export default function Home() {
     return '₹22 - ₹28 / km';
   };
 
-  async function generateQuote(e: React.FormEvent) {
+  function handleDirectWhatsAppQuote(e: React.FormEvent) {
     e.preventDefault();
-    setQuoteStatus('generating');
-    setTimeout(() => {
-      setQuoteStatus('done');
-    }, 1000);
+    sendToWhatsApp();
   }
 
   function sendToWhatsApp() {
+    const selectedVehicle = form.vehicleInfo || vehicleOptions[activeTab]?.[0] || 'Tempo Traveller';
+    const selectedCategory = tabs.find(t => t.id === activeTab)?.label || 'Tempo Traveller';
+    const pickupLoc = form.pickup || 'Bengaluru';
+    const dropLoc = form.destination || 'Karnataka';
+    const travelDate = form.date || new Date().toISOString().split('T')[0];
+    const travelTime = form.time || '06:00';
+    const pax = form.passengers || 'Standard';
+
     const details = `*🚕 BookMyRoute Official Trip Quotation Request*
 ----------------------------------------
-*Category:* ${tabs.find(t => t.id === activeTab)?.label}
-*Vehicle Selected:* ${form.vehicleInfo || vehicleOptions[activeTab][0]}
-*Passengers:* ${form.passengers || 'Standard capacity'}
-*Route:* ${form.pickup || 'Bengaluru'} to ${form.destination || 'Karnataka'}
-*Travel Date:* ${form.date} at ${form.time}
+*Category:* ${selectedCategory}
+*Vehicle Selected:* ${selectedVehicle}
+*Passengers:* ${pax}
+*Pickup:* ${pickupLoc}
+*Destination / Drop:* ${dropLoc}
+*Travel Date:* ${travelDate} at ${travelTime}
 *Estimated Pricing:* ${getEstimatedPrice()}
 ----------------------------------------
-_Please send me the formal quotation and confirm vehicle booking._`;
+_Please send me the formal quotation and confirm vehicle availability._`;
 
     // Save lead in backend
     fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Website Visitor',
+        name: 'Website Direct WhatsApp Inquiry',
         phone: CONTACT_PHONE,
-        service: `${form.vehicleInfo || 'Vehicle Booking'}`,
-        pickup: form.pickup || 'Bangalore',
-        destination: form.destination || 'Karnataka',
-        travel_date: form.date || new Date().toISOString().split('T')[0],
-        passengers: Number(form.passengers) || 4
+        service: `${selectedVehicle}`,
+        pickup: pickupLoc,
+        destination: dropLoc,
+        travel_date: travelDate,
+        passengers: Number(pax) || 4
       })
     }).catch(() => {});
 
@@ -190,7 +195,7 @@ _Please send me the formal quotation and confirm vehicle booking._`;
             ))}
           </div>
 
-          <form onSubmit={generateQuote} className="p-6 sm:p-10">
+          <form onSubmit={handleDirectWhatsAppQuote} className="p-6 sm:p-10">
             <div className="grid md:grid-cols-2 gap-5 mb-5">
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pickup Location</label>
@@ -289,79 +294,15 @@ _Please send me the formal quotation and confirm vehicle booking._`;
 
               <button
                 type="submit"
-                className="bg-[#FF7020] hover:bg-[#E55c0c] text-white font-black py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 col-span-2 md:col-span-1 h-[48px] cursor-pointer"
+                className="bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black py-3.5 px-4 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2 col-span-2 md:col-span-1 h-[48px] cursor-pointer"
               >
-                <FileText size={18} /> Get Quote
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                </svg>
+                <span>Get WhatsApp Quote</span>
               </button>
             </div>
           </form>
-
-          {/* Quotation Generation UI */}
-          <AnimatePresence>
-            {quoteStatus !== 'idle' && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                className="border-t border-slate-200 bg-slate-50 overflow-hidden"
-              >
-                {quoteStatus === 'generating' ? (
-                  <div className="p-8 flex flex-col items-center justify-center text-slate-500">
-                    <div className="w-10 h-10 border-4 border-slate-200 border-t-[#0A3D73] rounded-full animate-spin mb-3"></div>
-                    <p className="font-bold text-sm">Calculating transparent fare estimation...</p>
-                  </div>
-                ) : (
-                  <div className="p-6 sm:p-8">
-                    <div className="bg-white p-6 rounded-2xl border border-[#0A3D73]/20 shadow-sm relative overflow-hidden">
-                      <div className="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-black px-3.5 py-1 rounded-bl-xl">
-                        Quote Ready
-                      </div>
-                      <h3 className="text-lg font-black text-[#0A3D73] mb-4 border-b border-slate-100 pb-3">
-                        Instant Fare Quotation
-                      </h3>
-
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                        <div>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase">Vehicle Type</p>
-                          <p className="font-bold text-slate-800 text-sm">{form.vehicleInfo || vehicleOptions[activeTab][0]}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase">Route</p>
-                          <p className="font-bold text-slate-800 text-sm">{form.pickup || 'Bangalore'} → {form.destination || 'Karnataka'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase">Schedule</p>
-                          <p className="font-bold text-slate-800 text-sm">{form.date || 'Upcoming'}, {form.time}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase">Passengers</p>
-                          <p className="font-bold text-slate-800 text-sm">{form.passengers}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-400 font-bold uppercase">Estimated Rate</p>
-                          <p className="font-black text-xl text-[#FF7020]">{getEstimatedPrice()}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <button 
-                          onClick={sendToWhatsApp} 
-                          className="flex-1 bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
-                        >
-                          <Send size={18} /> Send Quote to WhatsApp (+91 73531 87804)
-                        </button>
-                        <button
-                          onClick={() => openBookingModal({ category: activeTab as any })}
-                          className="flex-1 bg-[#0A3D73] hover:bg-[#072d54] text-white font-bold py-3.5 px-6 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer"
-                        >
-                          <Ticket size={18} /> Complete Online Booking
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
       </div>
 
