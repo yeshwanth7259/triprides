@@ -1,7 +1,7 @@
 // Single source of truth for BookMyRoute Fleet, Pricing & Contact details
-export const CONTACT_PHONE = "+91 73531 87804";
-export const CONTACT_PHONE_TEL = "+917353187804";
-export const CONTACT_PHONE_WA = "917353187804";
+export const CONTACT_PHONE = "+91 72593 35286";
+export const CONTACT_PHONE_TEL = "+917259335286";
+export const CONTACT_PHONE_WA = "917259335286";
 export const CONTACT_EMAIL = "bookmyroute06@gmail.com";
 export const OFFICE_ADDRESS = "Uttharhalli, Bangalore, Karnataka - 560061";
 
@@ -47,11 +47,11 @@ export const FLEET_DATA: VehicleModel[] = [
     features: ['Chilled Air Conditioning', 'Spacious Boot Space', 'Aux/USB Sound System', 'Clean & Sanitized Cabin'],
     luggageCapacity: '2 Large Bags + 2 Small Bags',
     pricing: {
-      outstationPerKm: 13,
+      outstationPerKm: 12,
       minKmPerDay: 300,
       driverBataPerDay: 400,
       local8Hr80Km: 1800,
-      extraKmRate: 14,
+      extraKmRate: 12,
       extraHrRate: 150,
       airportFlatRate: 1200
     }
@@ -70,11 +70,11 @@ export const FLEET_DATA: VehicleModel[] = [
     features: ['Dual AC Vents', 'Reclining Middle Row', 'Rear USB Charging', 'Large Luggage Carrier Available'],
     luggageCapacity: '3 Large Bags + 3 Small Bags',
     pricing: {
-      outstationPerKm: 17,
+      outstationPerKm: 16,
       minKmPerDay: 300,
       driverBataPerDay: 450,
       local8Hr80Km: 2400,
-      extraKmRate: 17,
+      extraKmRate: 16,
       extraHrRate: 175,
       airportFlatRate: 1600
     }

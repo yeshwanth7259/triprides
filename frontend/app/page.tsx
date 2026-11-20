@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   MapPin, Users, Plane, Car, Bus, Map, Clock, CheckCircle, 
-  FileText, Send, Download, Mail, Calendar, Ticket, Phone, ArrowRight, ShieldCheck 
+  FileText, Send, Download, Mail, Calendar, Ticket, Phone, ArrowRight, ShieldCheck,
+  Star, Navigation, Sparkles, ExternalLink, UserCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,12 +15,21 @@ import {
   FLEET_DATA, 
   VEHICLE_CATEGORIES_CONFIG 
 } from '../lib/fleetData';
+import { HOMESTAYS_DATA } from '../lib/homestaysData';
+import { WHITE_BOARD_DRIVERS } from '../lib/whiteBoardDriversData';
 import { useBookingModal } from '../components/BookingModalContext';
+import PlaceAutocompleteInput from '../components/PlaceAutocompleteInput';
+import { PlaceItem } from '../lib/indiaCitiesData';
 
 export default function Home() {
   const { openBookingModal } = useBookingModal();
+  const [rideMode, setRideMode] = useState<'outstation' | 'local' | 'airport'>('outstation');
+  const [outstationType, setOutstationType] = useState<'roundtrip' | 'oneway'>('roundtrip');
+  const [selectedPlace, setSelectedPlace] = useState<PlaceItem | null>(null);
   const [activeTab, setActiveTab] = useState('tempo');
   const [form, setForm] = useState({ 
+    name: '',
+    phone: '',
     pickup: '', 
     destination: '', 
     date: '', 
@@ -74,20 +84,20 @@ export default function Home() {
 
   const getEstimatedPrice = () => {
     const selected = form.vehicleInfo || vehicleOptions[activeTab]?.[0] || '';
-    if (selected.includes('Sedan')) return '₹13/km (Local: ₹1,800)';
-    if (selected.includes('Ertiga')) return '₹17/km (Local: ₹2,400)';
-    if (selected.includes('Innova')) return '₹22/km (Local: ₹3,200)';
-    if (selected.includes('9/10')) return '₹24/km (Local: ₹4,000)';
-    if (selected.includes('12 Seater')) return '₹22/km (Local: ₹3,800)';
-    if (selected.includes('14 Seater')) return '₹24/km (Local: ₹4,200)';
-    if (selected.includes('17 Seater')) return '₹26/km (Local: ₹4,600)';
-    if (selected.includes('20 Seater')) return '₹28/km (Local: ₹5,000)';
-    if (selected.includes('21 Seater')) return '₹32/km (Local: ₹6,500)';
-    if (selected.includes('25 Seater')) return '₹36/km (Local: ₹7,500)';
-    if (selected.includes('32 Seater')) return '₹42/km (Local: ₹9,000)';
-    if (selected.includes('40 Seater')) return '₹48/km (Local: ₹10,500)';
-    if (selected.includes('50 Seater')) return '₹54/km (Local: ₹12,000)';
-    return '₹22 - ₹28 / km';
+    if (selected.includes('Sedan')) return '₹12/km (Local: ₹1,800)';
+    if (selected.includes('Ertiga')) return '₹16/km (Local: ₹2,400)';
+    if (selected.includes('Innova')) return '₹21/km (Local: ₹3,200)';
+    if (selected.includes('9/10')) return '₹23/km (Local: ₹4,000)';
+    if (selected.includes('12 Seater')) return '₹21/km (Local: ₹3,800)';
+    if (selected.includes('14 Seater')) return '₹23/km (Local: ₹4,200)';
+    if (selected.includes('17 Seater')) return '₹25/km (Local: ₹4,600)';
+    if (selected.includes('20 Seater')) return '₹27/km (Local: ₹5,000)';
+    if (selected.includes('21 Seater')) return '₹31/km (Local: ₹6,500)';
+    if (selected.includes('25 Seater')) return '₹35/km (Local: ₹7,500)';
+    if (selected.includes('32 Seater')) return '₹41/km (Local: ₹9,000)';
+    if (selected.includes('40 Seater')) return '₹47/km (Local: ₹10,500)';
+    if (selected.includes('50 Seater')) return '₹53/km (Local: ₹12,000)';
+    return '₹21 - ₹27 / km';
   };
 
   function handleDirectWhatsAppQuote(e: React.FormEvent) {
@@ -96,20 +106,25 @@ export default function Home() {
   }
 
   function sendToWhatsApp() {
+    const custName = form.name.trim() || 'Valued Passenger';
+    const custPhone = form.phone.trim() || 'Not Provided';
     const selectedVehicle = form.vehicleInfo || vehicleOptions[activeTab]?.[0] || 'Tempo Traveller';
     const selectedCategory = tabs.find(t => t.id === activeTab)?.label || 'Tempo Traveller';
-    const pickupLoc = form.pickup || 'Bengaluru';
-    const dropLoc = form.destination || 'Karnataka';
-    const travelDate = form.date || new Date().toISOString().split('T')[0];
+    const pickupLoc = form.pickup.trim() || 'Bangalore';
+    const dropLoc = form.destination.trim() || 'Outstation Destination';
+    const travelDate = form.date || 'Flexible Date';
     const travelTime = form.time || '06:00';
     const pax = form.passengers || 'Standard';
 
     const details = `*🚕 BookMyRoute Official Trip Quotation Request*
 ----------------------------------------
-*Category:* ${selectedCategory}
+*Passenger Name:* ${custName}
+*Phone / WhatsApp:* ${custPhone}
+*Trip Mode:* ${rideMode.toUpperCase()} (${outstationType === 'roundtrip' ? 'Round Trip' : 'One-Way Drop'})
+*Vehicle Category:* ${selectedCategory}
 *Vehicle Selected:* ${selectedVehicle}
 *Passengers:* ${pax}
-*Pickup:* ${pickupLoc}
+*Pickup Location:* ${pickupLoc}
 *Destination / Drop:* ${dropLoc}
 *Travel Date:* ${travelDate} at ${travelTime}
 *Estimated Pricing:* ${getEstimatedPrice()}
@@ -121,8 +136,8 @@ _Please send me the formal quotation and confirm vehicle availability._`;
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Website Direct WhatsApp Inquiry',
-        phone: CONTACT_PHONE,
+        name: custName,
+        phone: custPhone,
         service: `${selectedVehicle}`,
         pickup: pickupLoc,
         destination: dropLoc,
@@ -136,55 +151,163 @@ _Please send me the formal quotation and confirm vehicle availability._`;
 
   return (
     <main className="min-h-screen bg-[#F9FAFB] overflow-hidden pb-16">
-      {/* 1. End-to-End Hero Banner Graphic (Clean Image, No Overlay Text) */}
+      {/* 1. End-to-End Hero Banner Graphic - Bangalore to All Over India Outstation Travel */}
       <section className="relative w-full mt-[72px] bg-[#0A3D73] overflow-hidden">
-        <h1 className="sr-only">BookMyRoute | Cab, Tempo Traveller, Mini Bus & Bus Rental in Bangalore</h1>
+        <h1 className="sr-only">BookMyRoute | Bangalore to All Over India Outstation Cabs & Tempo Travellers</h1>
         <div className="w-full">
           <img 
-            src="/banner.png" 
-            alt="BookMyRoute Fleet Banner - Cabs, Tempo Travellers, Mini Buses and Coaches" 
-            className="w-full h-auto block object-cover md:object-contain max-h-[580px] mx-auto"
+            src="/banner-outstation-india.jpg" 
+            alt="Bangalore to All Over India - Outstation Travel from Bangalore - BookMyRoute" 
+            className="w-full h-auto block object-cover md:object-contain max-h-[580px] mx-auto shadow-md"
           />
         </div>
       </section>
 
-      {/* 2. Tejas Travels Search & Booking Card */}
-      <div className="container-x relative -mt-4 sm:-mt-8 md:-mt-12 z-20 mb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] overflow-hidden border border-slate-100"
-        >
-          {/* Form Header */}
-          <div className="bg-slate-50 border-b border-slate-200 p-6 md:px-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-            <div>
-              <h2 className="text-xl md:text-2xl font-black text-[#0A3D73] font-display">
-                Where would you like to travel?
-              </h2>
-              <p className="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">
-                Instant quotes sent straight to WhatsApp ({CONTACT_PHONE})
-              </p>
+      {/* 2. MakeMyTrip Style Main Category Bar & Search Card (No overlap on banner) */}
+      <div className="container-x relative mt-6 sm:mt-8 z-20 mb-16">
+        
+        {/* MakeMyTrip Top Category Bar */}
+        <div className="bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-xl border border-slate-100 flex items-center justify-between overflow-x-auto hide-scrollbar gap-2 mb-3">
+          <button
+            onClick={() => { setActiveTab('tempo'); }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'tempo' || activeTab === 'cab' 
+                ? 'bg-[#0A3D73] text-white shadow-xs' 
+                : 'text-slate-700 hover:bg-slate-100'
+            }`}
+          >
+            <Car size={15} className={activeTab === 'tempo' || activeTab === 'cab' ? 'text-[#FF7020]' : ''} />
+            <span>Outstation & Local Cabs</span>
+          </button>
+
+          <Link
+            href="/homestays"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0A3D73] hover:bg-blue-50 transition-all whitespace-nowrap"
+          >
+            <span>🏡 Villas & Homestays</span>
+            <span className="bg-[#FF7020] text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+              NEW
+            </span>
+          </Link>
+
+          <Link
+            href="/white-board-drivers"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0A3D73] hover:bg-blue-50 transition-all whitespace-nowrap"
+          >
+            <span>🚗 White Board Drivers</span>
+            <span className="bg-emerald-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
+              Verified
+            </span>
+          </Link>
+
+          <Link
+            href="/pricing"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0A3D73] hover:bg-blue-50 transition-all whitespace-nowrap"
+          >
+            <span>💰 Transparent Pricing</span>
+          </Link>
+
+          <Link
+            href="/invoice"
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-[#0A3D73] bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-all whitespace-nowrap"
+          >
+            <FileText size={14} className="text-[#FF7020]" />
+            <span>Quotation & Invoice</span>
+          </Link>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] overflow-hidden border border-slate-100">
+          {/* Form Header with Ola Cabs Style Primary Mode Selector */}
+          <div className="bg-slate-50 border-b border-slate-200 p-5 md:px-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+              <div>
+                <h2 className="text-xl md:text-2xl font-black text-[#0A3D73] font-display">
+                  Where would you like to travel?
+                </h2>
+                <p className="text-slate-500 text-xs sm:text-sm font-medium mt-0.5">
+                  Instant quotes sent straight to WhatsApp ({CONTACT_PHONE})
+                </p>
+              </div>
+
+              {/* Ola-Style Mode Switcher (Outstation / Local / Airport) */}
+              <div className="bg-slate-200/80 p-1 rounded-2xl flex items-center gap-1 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setRideMode('outstation')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    rideMode === 'outstation'
+                      ? 'bg-[#0A3D73] text-white shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900'
+                  }`}
+                >
+                  🚗 Outstation
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRideMode('local')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    rideMode === 'local'
+                      ? 'bg-[#0A3D73] text-white shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900'
+                  }`}
+                >
+                  🏙️ Local Rentals
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRideMode('airport')}
+                  className={`flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                    rideMode === 'airport'
+                      ? 'bg-[#0A3D73] text-white shadow-sm'
+                      : 'text-slate-700 hover:text-slate-900'
+                  }`}
+                >
+                  ✈️ Airport Taxi
+                </button>
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => openBookingModal({ category: activeTab as any })}
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-black text-[#0A3D73] bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg transition-colors cursor-pointer"
-            >
-              <Ticket size={14} /> Open Full Booking Modal →
-            </button>
+
+            {/* Outstation Round-Trip vs One-Way Sub-Toggle (Ola Cabs Style) */}
+            {rideMode === 'outstation' && (
+              <div className="flex items-center gap-3 pt-2 text-xs">
+                <span className="text-slate-500 font-bold uppercase tracking-wider text-[11px]">Outstation Mode:</span>
+                <button
+                  type="button"
+                  onClick={() => setOutstationType('roundtrip')}
+                  className={`px-3 py-1 rounded-lg font-black transition-all cursor-pointer ${
+                    outstationType === 'roundtrip'
+                      ? 'bg-orange-100 text-[#FF7020] border border-orange-300'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  ✓ Round Trip
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOutstationType('oneway')}
+                  className={`px-3 py-1 rounded-lg font-black transition-all cursor-pointer ${
+                    outstationType === 'oneway'
+                      ? 'bg-orange-100 text-[#FF7020] border border-orange-300'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  }`}
+                >
+                  One-Way Drop
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Tabs */}
+          {/* Vehicle Category Tabs */}
           <div className="flex overflow-x-auto border-b border-slate-200 hide-scrollbar bg-white">
             {tabs.map(tab => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => { 
                   setActiveTab(tab.id); 
                   setForm({ ...form, vehicleInfo: vehicleOptions[tab.id]?.[0] || '' }); 
                 }}
-                className={`flex items-center gap-2 whitespace-nowrap px-6 sm:px-8 py-4 font-bold text-xs sm:text-sm transition-colors cursor-pointer ${
+                className={`flex items-center gap-2 whitespace-nowrap px-6 sm:px-8 py-3.5 font-bold text-xs sm:text-sm transition-colors cursor-pointer ${
                   activeTab === tab.id
                     ? 'bg-[#0A3D73] text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -195,48 +318,74 @@ _Please send me the formal quotation and confirm vehicle availability._`;
             ))}
           </div>
 
-          <form onSubmit={handleDirectWhatsAppQuote} className="p-6 sm:p-10">
-            <div className="grid md:grid-cols-2 gap-5 mb-5">
-              <div className="relative">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pickup Location</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0A3D73] transition-colors">
-                  <MapPin className="ml-4 text-[#FF7020]" size={18} />
+          <form onSubmit={handleDirectWhatsAppQuote} className="p-6 sm:p-8">
+            
+            {/* Row 1: Passenger Name and Phone Number Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5">
+                  <UserCheck size={14} className="text-[#0A3D73]" />
+                  <span>Your Full Name *</span>
+                </label>
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
+                    type="text"
                     required
-                    list="locations"
-                    placeholder="e.g. Uttharhalli / Bangalore Airport"
-                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
-                    value={form.pickup}
-                    onChange={e => setForm({ ...form, pickup: e.target.value })}
+                    placeholder="Enter your full name..."
+                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    value={form.name}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
                   />
                 </div>
               </div>
 
-              <div className="relative">
-                <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Drop Location / Destination</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center hover:border-slate-400 focus-within:border-[#0A3D73] transition-colors">
-                  <MapPin className="ml-4 text-[#0A3D73]" size={18} />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wide flex items-center gap-1.5">
+                  <Phone size={14} className="text-emerald-600" />
+                  <span>Mobile / WhatsApp Number *</span>
+                </label>
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
+                    type="tel"
                     required
-                    list="locations"
-                    placeholder="e.g. Mysore / Coorg / Ooty"
-                    className="w-full bg-transparent px-4 py-3.5 outline-none text-slate-800 font-semibold text-[15px]"
-                    value={form.destination}
-                    onChange={e => setForm({ ...form, destination: e.target.value })}
+                    placeholder="Enter 10-digit mobile number (e.g. 98765 43210)..."
+                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    value={form.phone}
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
                   />
                 </div>
               </div>
             </div>
 
-            <datalist id="locations">
-              {karnatakaLocations.map(loc => <option key={loc} value={loc} />)}
-            </datalist>
+            {/* Row 2: Ola Cabs Style Single-Letter Search Autocomplete Row */}
+            <div className="grid md:grid-cols-2 gap-5 mb-5">
+              <PlaceAutocompleteInput
+                label="Pickup Location in Bangalore"
+                value={form.pickup}
+                onChange={(val) => setForm({ ...form, pickup: val })}
+                placeholder="Type pickup area (e.g. Uttharhalli, Jayanagar, Airport)..."
+                iconType="pickup"
+                required
+              />
+
+              <PlaceAutocompleteInput
+                label={rideMode === 'outstation' ? 'Destination / Drop City (Entire India)' : rideMode === 'local' ? 'Local Destination / Drop Area' : 'Airport Drop / Pickup Area'}
+                value={form.destination}
+                onChange={(val, place) => {
+                  setForm({ ...form, destination: val });
+                  if (place) setSelectedPlace(place);
+                }}
+                placeholder={rideMode === 'outstation' ? 'Type 1 letter for any Indian city (e.g. Coorg, Ooty, Goa, Mysore)...' : 'Type drop area in Bangalore...'}
+                iconType="drop"
+                required
+              />
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
               {/* 1. Travel Date */}
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Travel Date</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="date"
                     required
@@ -250,7 +399,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
               {/* 2. Pickup Time */}
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Pickup Time</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="time"
                     required
@@ -264,7 +413,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
               {/* 3. Passengers */}
               <div className="relative">
                 <label className="block text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide">Passengers</label>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="number"
                     min="1"
@@ -285,7 +434,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                     {getEstimatedPrice().split('(')[0].trim()}
                   </span>
                 </div>
-                <div className="relative border rounded-xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
+                <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <select
                     className="w-full bg-transparent px-3 py-3 outline-none text-slate-800 font-semibold text-xs sm:text-sm appearance-none cursor-pointer pr-8"
                     value={form.vehicleInfo}
@@ -302,9 +451,9 @@ _Please send me the formal quotation and confirm vehicle availability._`;
               </div>
             </div>
 
-            {/* Row 3: Dedicated Action Bar with Beautifully Aligned WhatsApp Button & Trust Badges */}
-            <div className="pt-5 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-6 text-xs font-bold text-slate-500">
+            {/* Row 3: Dedicated Action Bar with Beautifully Aligned WhatsApp Button & Quotation Link */}
+            <div className="pt-5 border-t border-slate-100 flex flex-col lg:flex-row items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-xs font-bold text-slate-500">
                 <span className="flex items-center gap-1.5 text-slate-600">
                   <CheckCircle size={15} className="text-emerald-500 shrink-0" />
                   <span>Instant WhatsApp Quotation</span>
@@ -319,19 +468,29 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                 </span>
               </div>
 
-              <button
-                type="submit"
-                className="w-full sm:w-auto min-w-[280px] bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black text-sm sm:text-base py-3.5 px-8 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
-                </svg>
-                <span>Get Instant Quote on WhatsApp</span>
-                <ArrowRight size={18} />
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                <Link
+                  href={`/invoice?name=${encodeURIComponent(form.name)}&phone=${encodeURIComponent(form.phone)}&pickup=${encodeURIComponent(form.pickup)}&drop=${encodeURIComponent(form.destination)}&vehicle=${encodeURIComponent(form.vehicleInfo)}&date=${encodeURIComponent(form.date)}`}
+                  className="w-full sm:w-auto text-[#0A3D73] hover:text-[#FF7020] bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200 font-black text-xs sm:text-sm py-3 px-5 rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+                >
+                  <FileText size={16} />
+                  <span>View / Download Formal Quote</span>
+                </Link>
+
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto min-w-[260px] bg-[#25D366] hover:bg-[#1EBE5D] text-white font-black text-sm sm:text-base py-3 px-7 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-[0.98] flex items-center justify-center gap-2.5 cursor-pointer shrink-0"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                  </svg>
+                  <span>Get Instant Quote on WhatsApp</span>
+                  <ArrowRight size={18} />
+                </button>
+              </div>
             </div>
           </form>
-        </motion.div>
+        </div>
       </div>
 
       {/* Fleet Categories Highlight */}
@@ -423,6 +582,198 @@ _Please send me the formal quotation and confirm vehicle availability._`;
         </div>
       </section>
 
+      {/* NEW: MakeMyTrip Inspired Villas, Homestays & Budget Rooms Showcase */}
+      <section className="container-x py-14 border-t border-slate-200">
+        
+        {/* Banner Uploaded by User: Now Find Stays Too! Book Your Vehicle & Stay Together */}
+        <div className="mb-10 rounded-3xl overflow-hidden shadow-xl border border-slate-200 bg-slate-900 group">
+          <Link href="/homestays" className="block relative">
+            <img 
+              src="/banner-stays-vehicle.jpg" 
+              alt="Now Find Stays Too! Book Your Vehicle & Stay Together on BookMyRoute"
+              className="w-full h-auto object-cover max-h-[360px] group-hover:scale-[1.01] transition-transform duration-300"
+            />
+          </Link>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#FF7020] mb-2 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+              <Sparkles size={13} /> Stays & Rooms Across Entire India
+            </div>
+            <h2 className="text-2xl sm:text-4xl font-black font-display text-[#0A3D73]">
+              Handpicked Rooms, Homestays & Luxury Villas
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+              Budget backpacker rooms from ₹699 to ultra-luxury private pool estates. Every stay features verified address details and direct 1-click Google Maps navigation.
+            </p>
+          </div>
+          <Link
+            href="/homestays"
+            className="inline-flex items-center gap-1.5 bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs px-5 py-3 rounded-xl transition-all shadow-md shrink-0 self-start md:self-end"
+          >
+            <span>Browse All Stays & Rooms</span>
+            <ArrowRight size={14} />
+          </Link>
+        </div>
+
+        {/* Stays Grid: Show Small Scale (Budget), Mid Scale (Homestay), and Luxury Villa */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {HOMESTAYS_DATA.slice(0, 3).map((stay) => (
+            <div
+              key={stay.id}
+              className="bg-white rounded-3xl overflow-hidden border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group"
+            >
+              <div className="h-52 overflow-hidden relative bg-slate-100">
+                <img
+                  src={stay.images[0]}
+                  alt={stay.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute top-3 left-3 bg-[#0A3D73]/95 text-white px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm">
+                  {stay.scaleLabel}
+                </div>
+                <div className="absolute top-3 right-3 bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg text-xs font-black flex items-center gap-1 shadow-xs">
+                  <Star size={12} className="fill-amber-500 text-amber-500" /> {stay.rating}
+                </div>
+                <div className="absolute bottom-3 left-3 right-3 bg-black/60 backdrop-blur-xs text-white text-[10px] font-semibold px-2.5 py-1 rounded-md truncate">
+                  📍 {stay.distanceKmFromBangalore} KM from Bangalore • {stay.approxDriveTime}
+                </div>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                    <span className="text-[#0A3D73] font-black">{stay.destination}, {stay.state}</span>
+                    <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-black">{stay.category}</span>
+                  </div>
+
+                  <h3 className="font-black text-base text-slate-900 mb-2 leading-snug line-clamp-1 group-hover:text-[#0A3D73] transition-colors">
+                    {stay.name}
+                  </h3>
+
+                  {/* Clean Address display */}
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 mb-3 flex items-start gap-1.5">
+                    <MapPin size={13} className="text-[#FF7020] shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-slate-600 font-medium line-clamp-2 leading-tight">
+                      {stay.address}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 space-y-2.5">
+                  <div className="flex items-center justify-between bg-blue-50/80 border border-blue-200/70 rounded-xl px-2.5 py-1.5 text-xs">
+                    <span className="text-[#0A3D73] font-bold text-[11px] flex items-center gap-1">
+                      <Phone size={12} className="text-[#FF7020]" />
+                      <span>Direct Owner Rates on Google</span>
+                    </span>
+                    <span className="text-[10px] font-black text-emerald-800 bg-white border border-emerald-200 px-1.5 py-0.5 rounded shadow-2xs">
+                      Verified
+                    </span>
+                  </div>
+
+                  {/* 1-Click Google Maps Direction & Contact */}
+                  <a
+                    href={stay.googleMapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full bg-[#0A3D73] hover:bg-[#072c54] text-white py-2.5 px-3 rounded-xl text-xs font-black transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                  >
+                    <Navigation size={13} className="text-[#FF7020]" />
+                    <span>📍 View on Google Maps (Contact & Rates)</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* NEW: Hire Driver for Your Personal Car (White Board Vehicle) */}
+      <section className="bg-slate-50 py-14 border-t border-slate-200">
+        <div className="container-x">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 mb-2 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                <ShieldCheck size={14} /> Chauffeur on Demand for Your Car
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-black font-display text-[#0A3D73]">
+                Hire a Master Chauffeur for Your Personal Car
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1.5 max-w-2xl leading-relaxed">
+                Sit back and relax in your own car. Hire an expert, verified driver skilled in driving <strong>all vehicle types</strong> (Manual, Automatic, SUV, EV, and Luxury) for outstation trips, airport transfers, or city commutes.
+              </p>
+            </div>
+            <Link
+              href="/white-board-drivers"
+              className="inline-flex items-center gap-1.5 bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs px-5 py-3 rounded-xl transition-all shadow-md shrink-0 self-start md:self-end"
+            >
+              <span>Driver Details & Hire</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+
+          {/* Featured Driver Card: Yeshwanth K */}
+          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-md max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <img
+                src={WHITE_BOARD_DRIVERS[0].avatar}
+                alt={WHITE_BOARD_DRIVERS[0].name}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-slate-200 shadow-sm shrink-0"
+              />
+              <div>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <h3 className="font-black text-slate-900 text-xl sm:text-2xl">{WHITE_BOARD_DRIVERS[0].name}</h3>
+                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Verified Master Driver
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 font-medium">
+                  {WHITE_BOARD_DRIVERS[0].roleTitle} • {WHITE_BOARD_DRIVERS[0].city}
+                </p>
+                <div className="flex items-center gap-2 mt-2 text-xs">
+                  <span className="flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-200 font-black px-2 py-0.5 rounded-md">
+                    <Star size={12} className="fill-amber-500 text-amber-500" /> {WHITE_BOARD_DRIVERS[0].rating} ({WHITE_BOARD_DRIVERS[0].reviewsCount} Reviews)
+                  </span>
+                  <span className="text-slate-600 font-bold">
+                    {WHITE_BOARD_DRIVERS[0].experienceYears}+ Years Highway Driving
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold text-slate-700">
+                  <span className="bg-slate-100 px-2 py-0.5 rounded">All Sedans (Dzire, Etios, City)</span>
+                  <span className="bg-slate-100 px-2 py-0.5 rounded">All SUVs (Innova, Crysta, Fortuner)</span>
+                  <span className="bg-slate-100 px-2 py-0.5 rounded">Compact SUVs (Creta, Brezza)</span>
+                  <span className="bg-slate-100 px-2 py-0.5 rounded">Automatic & Manual Specialist</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2 w-full md:w-auto shrink-0">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 text-center mb-1">
+                <span className="text-[10px] text-slate-400 block font-bold uppercase">Chauffeur Rates</span>
+                <span className="text-sm font-black text-[#0A3D73]">Local: ₹799/8h • Outstation: ₹1,199/day</span>
+              </div>
+              <div className="flex gap-2">
+                <a
+                  href={`tel:${WHITE_BOARD_DRIVERS[0].phoneTel}`}
+                  className="flex-1 bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <Phone size={13} className="text-[#FF7020]" /> Call {WHITE_BOARD_DRIVERS[0].phoneRaw}
+                </a>
+                <a
+                  href={`https://wa.me/91${WHITE_BOARD_DRIVERS[0].phoneRaw}?text=Hi%20Yeshwanth%20K%2C%20I%20would%20like%20to%20hire%20you%20as%20a%20driver%20for%20my%20car.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-black text-xs py-2.5 px-4 rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Trust Highlights */}
       <section className="bg-slate-100/70 py-16 border-y border-slate-200">
         <div className="container-x">
@@ -440,7 +791,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                 {[
                   "Police-Verified Route Drivers",
                   "24/7 GPS Tracking on All Vehicles",
-                  "100% Transparent Billing & GST",
+                  "100% Transparent Billing & Invoices",
                   "Zero Hidden Driver Allowance"
                 ].map((text, idx) => (
                   <div key={idx} className="flex items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-800">

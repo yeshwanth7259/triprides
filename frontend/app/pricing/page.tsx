@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import type { Metadata } from 'next';
 import { 
   Car, Users, Bus, Check, ArrowRight, ShieldCheck, 
-  Sparkles, Phone, Calculator, Info, MapPin, Calendar, Clock 
+  Sparkles, Phone, Calculator, Info, MapPin, Calendar, Clock, CheckCircle 
 } from 'lucide-react';
 import { 
   FLEET_DATA, 

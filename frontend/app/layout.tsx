@@ -13,7 +13,7 @@ const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
 
 export const metadata: Metadata = {
   title: 'BookMyRoute | Cab, Tempo Traveller, Mini Bus & Bus Rental Bangalore',
-  description: 'Book Cabs (4-7 seats), Tempo Travellers (8-20 seats), Mini Buses (21-25 seats) and Coach Buses (32-50 seats) across Karnataka. Instant WhatsApp quotes: +91 73531 87804.',
+  description: 'Book Cabs (4-7 seats), Tempo Travellers (8-20 seats), Mini Buses (21-25 seats) and Coach Buses (32-50 seats) across Karnataka. Instant WhatsApp quotes: +91 72593 35286.',
 };
 
 export default function RootLayout({

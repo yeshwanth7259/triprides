@@ -575,6 +575,14 @@ export default function BookTripModal({
                 <span>Re-open WhatsApp Chat</span>
               </button>
 
+              {/* NEW: Direct Download Trip Invoice Button */}
+              <a
+                href={`/invoice?id=BMR-${Math.floor(10000 + Math.random() * 90000)}&name=${encodeURIComponent(fullName)}&phone=${encodeURIComponent(mobile)}&pickup=${encodeURIComponent(pickupLocation)}&drop=${encodeURIComponent(dropLocation || 'Bangalore')}&vehicle=${encodeURIComponent(selectedVehicle?.name || 'Tempo Traveller')}&date=${encodeURIComponent(travelDate)}`}
+                className="w-full bg-[#0A3D73] hover:bg-[#072d56] text-white font-bold text-xs py-2.5 rounded-xl transition-colors flex items-center justify-center gap-1.5 shadow-sm"
+              >
+                <span>Download Official Trip Invoice</span>
+              </a>
+
               <div className="flex gap-2">
                 <a
                   href={`tel:${CONTACT_PHONE_TEL}`}
