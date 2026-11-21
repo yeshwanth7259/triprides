@@ -3,7 +3,9 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
-  retries: 1,
+  workers: 2,
+  retries: 0,
+  timeout: 35000,
 
   reporter: [
     ['list'],
@@ -11,11 +13,12 @@ export default defineConfig({
   ],
 
   use: {
-    baseURL: 'https://www.bookmyroute.in',
+    baseURL: process.env.BASE_URL || 'https://www.bookmyroute.in',
     headless: true,
+    navigationTimeout: 25000,
+    actionTimeout: 12000,
     trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure'
+    screenshot: 'only-on-failure'
   },
 
   projects: [
