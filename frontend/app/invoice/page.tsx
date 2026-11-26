@@ -7,7 +7,7 @@ import {
   Phone, Mail, MapPin, Calendar, Car, 
   ArrowLeft, RefreshCw, QrCode, Sparkles, User, ShieldCheck,
   CreditCard, ArrowRight, Check, AlertCircle, FileCheck,
-  ChevronDown, Calculator, Compass, Clock
+  ChevronDown, Calculator, Compass, Clock, Download
 } from 'lucide-react';
 import { 
   CONTACT_PHONE, 
@@ -261,6 +261,20 @@ export default function InvoicePage() {
     window.print();
   };
 
+  const handleDownloadPDF = () => {
+    const originalTitle = document.title;
+    const cleanRef = (docMode === 'quotation' ? quotationNumber : invoiceNumber).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const docName = docMode === 'quotation' 
+      ? `BookMyRoute_Quotation_${cleanRef}` 
+      : `BookMyRoute_Tax_Invoice_${cleanRef}`;
+    
+    document.title = docName;
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 2000);
+  };
+
   const handleWhatsAppShare = () => {
     const isQuo = docMode === 'quotation';
     const text = isQuo
@@ -360,18 +374,26 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
             </button>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+            <button
+              onClick={handleDownloadPDF}
+              className="flex-1 sm:flex-initial bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Download size={14} />
+              <span>Download PDF</span>
+            </button>
+
             <button
               onClick={handlePrint}
-              className="bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              className="flex-1 sm:flex-initial bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Printer size={14} />
-              <span>Print / Save PDF</span>
+              <span>Print Document</span>
             </button>
 
             <button
               onClick={handleWhatsAppShare}
-              className="bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Share2 size={14} />
               <span>Share on WhatsApp</span>
@@ -418,10 +440,11 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               <input
                 type="text"
                 required
+                autoComplete="name"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Enter full name..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
               />
             </div>
 
@@ -432,11 +455,13 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               </label>
               <input
                 type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 required
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Enter 10-digit mobile number..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
               />
             </div>
 
@@ -448,7 +473,7 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               <select
                 value={tripType}
                 onChange={(e) => setTripType(e.target.value as any)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D73] cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73] cursor-pointer"
               >
                 <option value="roundtrip">Outstation Round Trip (Standard)</option>
                 <option value="oneway">Outstation One-Way Drop</option>
@@ -465,7 +490,7 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               <select
                 value={selectedVehicleId}
                 onChange={(e) => setSelectedVehicleId(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0A3D73] cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73] cursor-pointer"
               >
                 {FLEET_PRICING.map((v) => (
                   <option key={v.id} value={v.id}>
@@ -515,7 +540,7 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
                   type="date"
                   value={travelDate}
                   onChange={(e) => setTravelDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-[11px]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-[11px]"
                 />
               </div>
 
@@ -523,11 +548,12 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
                 <label className="font-bold text-slate-700 block mb-1">Trip Days</label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="1"
                   max="15"
                   value={tripDays}
                   onChange={(e) => setTripDays(Number(e.target.value))}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-[11px]"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-[11px]"
                 />
               </div>
             </div>
@@ -535,7 +561,7 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           </div>
 
           {/* Quick Auto-Calculation Preview Strip */}
-          <div className="mt-5 p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="mt-5 p-4 bg-blue-50/70 border border-blue-200/80 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs">
             <div className="flex flex-wrap items-center gap-4">
               <div>
                 <span className="text-slate-500 block text-[10px] uppercase font-bold">Auto Billed KM</span>
@@ -558,11 +584,22 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               </div>
             </div>
 
-            <div className="text-right">
-              <span className="text-slate-500 block text-[10px] uppercase font-bold">Total Estimated Fare</span>
-              <span className="font-black text-emerald-700 font-mono text-base sm:text-lg">
-                {grandTotal > 0 ? `₹${grandTotal.toLocaleString()}` : '₹0'}
-              </span>
+            <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto border-t md:border-t-0 pt-3 md:pt-0 border-blue-200/60">
+              <div className="text-left md:text-right">
+                <span className="text-slate-500 block text-[10px] uppercase font-bold">Total Estimated Fare</span>
+                <span className="font-black text-emerald-700 font-mono text-base sm:text-lg">
+                  {grandTotal > 0 ? `₹${grandTotal.toLocaleString()}` : '₹0'}
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadPDF}
+                className="bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+              >
+                <Download size={13} />
+                <span>Save PDF</span>
+              </button>
             </div>
           </div>
 
@@ -574,23 +611,23 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           PRINTABLE DOCUMENT (SWITCHES BETWEEN OFFICIAL QUOTATION AND PAID INVOICE)
           ========================================================================= */}
       <div className="container-x max-w-5xl mx-auto px-4 print:p-0 print:max-w-none">
-        <div id="printable-area" className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 sm:p-12 print:p-0 print:shadow-none print:border-none print:rounded-none text-slate-800">
+        <div id="printable-area" className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8 sm:p-12 print:p-2 print:shadow-none print:border-none print:rounded-none text-slate-800">
           
           {/* Document Header Row: Official Logo & Contact */}
-          <div className="border-b-2 border-slate-800 pb-6 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6">
+          <div className="border-b-2 border-slate-800 pb-6 mb-6 print:pb-2.5 print:mb-2.5">
+            <div className="flex flex-col sm:flex-row print:flex-row sm:items-start justify-between gap-6 print:gap-3">
               
               {/* Brand Logo & Address */}
               <div>
-                <div className="mb-3">
+                <div className="mb-3 print:mb-1.5">
                   <img 
                     src="/logo.png" 
                     alt="BookMyRoute Official Logo" 
-                    className="h-14 sm:h-16 w-auto object-contain"
+                    className="h-14 sm:h-16 print:h-10 w-auto object-contain"
                   />
                 </div>
                 
-                <p className="text-xs text-slate-600 max-w-sm leading-relaxed">
+                <p className="text-xs print:text-[10px] text-slate-600 max-w-sm leading-relaxed print:leading-snug">
                   <strong>Office:</strong> {OFFICE_ADDRESS}<br />
                   <strong>Helpline:</strong> {CONTACT_PHONE} | <strong>Email:</strong> {CONTACT_EMAIL}<br />
                   <strong>Website:</strong> www.bookmyroute.in
@@ -598,14 +635,14 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               </div>
 
               {/* Document Title & Reference Details */}
-              <div className="sm:text-right">
-                <div className={`inline-block text-white font-black text-xs uppercase tracking-wider px-4 py-1.5 rounded-lg mb-3 shadow-xs ${
+              <div className="sm:text-right print:text-right">
+                <div className={`inline-block text-white font-black text-xs print:text-[11px] uppercase tracking-wider px-4 py-1.5 print:px-3 print:py-1 rounded-lg mb-3 print:mb-1.5 shadow-xs ${
                   docMode === 'quotation' ? 'bg-[#0A3D73]' : 'bg-emerald-800'
                 }`}>
                   {docMode === 'quotation' ? 'OFFICIAL TRAVEL QUOTATION' : 'TRIP INVOICE & BILL'}
                 </div>
 
-                <div className="space-y-1 text-xs">
+                <div className="space-y-1 print:space-y-0.5 text-xs print:text-[10px]">
                   {docMode === 'quotation' ? (
                     <>
                       <p><span className="text-slate-500 font-medium">Quotation No:</span> <strong className="font-mono text-slate-900">{quotationNumber}</strong></p>
@@ -619,9 +656,9 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
                       <p><span className="text-slate-500 font-medium">Booking ID:</span> <strong className="font-mono text-[#0A3D73]">{bookingId}</strong></p>
                       <p><span className="text-slate-500 font-medium">Invoice Date:</span> <strong>{travelDate}</strong></p>
                       <p><span className="text-slate-500 font-medium">Payment Mode:</span> <strong>{paymentMode}</strong></p>
-                      <div className="pt-1">
-                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] font-black px-2.5 py-0.5 rounded-full">
-                          <CheckCircle size={12} /> {paymentStatus}
+                      <div className="pt-1 print:pt-0.5">
+                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[11px] print:text-[9.5px] font-black px-2.5 py-0.5 rounded-full">
+                          <CheckCircle size={12} className="print:w-2.5 print:h-2.5" /> {paymentStatus}
                         </span>
                       </div>
                     </>
@@ -633,14 +670,14 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           </div>
 
           {/* Customer Particulars & Route (Two Columns) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 text-xs">
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 print:gap-2.5 mb-8 print:mb-2.5 text-xs print:text-[10.5px] page-break-avoid">
             
             {/* Customer Details */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <h3 className="font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-2 mb-2.5 flex items-center gap-1.5">
-                <User size={13} className="text-[#0A3D73]" /> Passenger / Customer Particulars
+            <div className="bg-slate-50 p-4 print:p-2.5 rounded-xl border border-slate-200">
+              <h3 className="font-black text-slate-900 uppercase tracking-wider text-[11px] print:text-[10px] border-b border-slate-200 pb-2 print:pb-1 mb-2.5 print:mb-1.5 flex items-center gap-1.5">
+                <User size={13} className="text-[#0A3D73] print:w-3 print:h-3" /> Passenger / Customer Particulars
               </h3>
-              <div className="space-y-1.5 text-slate-700">
+              <div className="space-y-1.5 print:space-y-0.5 text-slate-700">
                 <p><span className="text-slate-500">Full Name:</span> <strong className="text-slate-900">{customerName.trim() || '— (Enter name above)'}</strong></p>
                 <p><span className="text-slate-500">Contact Number:</span> <strong>{customerPhone.trim() || '— (Enter phone above)'}</strong></p>
                 <p><span className="text-slate-500">Email Address:</span> {customerEmail.trim() || '—'}</p>
@@ -649,11 +686,11 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
             </div>
 
             {/* Trip Particulars */}
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <h3 className="font-black text-slate-900 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-2 mb-2.5 flex items-center gap-1.5">
-                <Car size={13} className="text-[#FF7020]" /> Vehicle & Route Details
+            <div className="bg-slate-50 p-4 print:p-2.5 rounded-xl border border-slate-200">
+              <h3 className="font-black text-slate-900 uppercase tracking-wider text-[11px] print:text-[10px] border-b border-slate-200 pb-2 print:pb-1 mb-2.5 print:mb-1.5 flex items-center gap-1.5">
+                <Car size={13} className="text-[#FF7020] print:w-3 print:h-3" /> Vehicle & Route Details
               </h3>
-              <div className="space-y-1.5 text-slate-700">
+              <div className="space-y-1.5 print:space-y-0.5 text-slate-700">
                 <p><span className="text-slate-500">Vehicle Booked:</span> <strong className="text-[#0A3D73]">{currentVehicle.name}</strong></p>
                 <p><span className="text-slate-500">Seating Capacity:</span> <strong>{currentVehicle.seats} (Pushback AC)</strong></p>
                 {docMode === 'invoice' && (
@@ -669,69 +706,69 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           </div>
 
           {/* Itemized Fare Estimation / Billing Table */}
-          <div className="mb-6 overflow-x-auto">
-            <table className="w-full text-xs text-left border-collapse border border-slate-300">
+          <div className="mb-6 print:mb-2.5 overflow-x-auto page-break-avoid">
+            <table className="w-full text-xs print:text-[10.5px] text-left border-collapse border border-slate-300">
               <thead>
-                <tr className="bg-[#0A3D73] text-white uppercase text-[10px] tracking-wider">
-                  <th className="py-2.5 px-3 border border-slate-300 w-12 text-center">#</th>
-                  <th className="py-2.5 px-4 border border-slate-300">Description of Service</th>
-                  <th className="py-2.5 px-3 border border-slate-300 text-center w-24">Units</th>
-                  <th className="py-2.5 px-3 border border-slate-300 text-right w-24">Rate (₹)</th>
-                  <th className="py-2.5 px-4 border border-slate-300 text-right w-28">Amount (₹)</th>
+                <tr className="bg-[#0A3D73] text-white uppercase text-[10px] print:text-[9.5px] tracking-wider">
+                  <th className="py-2.5 print:py-1 px-3 print:px-2 border border-slate-300 w-12 text-center">#</th>
+                  <th className="py-2.5 print:py-1 px-4 print:px-2 border border-slate-300">Description of Service</th>
+                  <th className="py-2.5 print:py-1 px-3 print:px-2 border border-slate-300 text-center w-24">Units</th>
+                  <th className="py-2.5 print:py-1 px-3 print:px-2 border border-slate-300 text-right w-24">Rate (₹)</th>
+                  <th className="py-2.5 print:py-1 px-4 print:px-2 border border-slate-300 text-right w-28">Amount (₹)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-800">
                 <tr>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-medium">1</td>
-                  <td className="py-3 px-4 border border-slate-200">
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-medium">1</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200">
                     <strong className="text-slate-900 block">
                       {tripType === 'roundtrip' ? 'Outstation Round Trip Vehicle Rental' : tripType === 'oneway' ? 'Outstation One-Way Drop' : tripType === 'local' ? 'Local Bangalore City Package' : 'Airport Transfer'}
                     </strong>
-                    <span className="text-slate-500 text-[11px]">
+                    <span className="text-slate-500 text-[11px] print:text-[9px]">
                       From {pickupLocation.trim() || '[Pickup Location]'} to {finalDestinationDisplay === '—' ? '[Destination City]' : finalDestinationDisplay} {routeHighlightsDisplay ? `via ${routeHighlightsDisplay}` : ''}
                     </span>
                   </td>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-mono">{distanceKm} KM</td>
-                  <td className="py-3 px-3 border border-slate-200 text-right font-mono">₹{ratePerKm}</td>
-                  <td className="py-3 px-4 border border-slate-200 text-right font-mono font-bold">₹{baseFare.toLocaleString()}</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-mono">{distanceKm} KM</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-right font-mono">₹{ratePerKm}</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200 text-right font-mono font-bold">₹{baseFare.toLocaleString()}</td>
                 </tr>
 
                 <tr>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-medium">2</td>
-                  <td className="py-3 px-4 border border-slate-200">
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-medium">2</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200">
                     <strong className="text-slate-900 block">Driver Bata / Outstation Daily Allowance</strong>
-                    <span className="text-slate-500 text-[11px]">Commercial chauffeur lodging & food allowance</span>
+                    <span className="text-slate-500 text-[11px] print:text-[9px]">Commercial chauffeur lodging & food allowance</span>
                   </td>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-mono">{tripDays} Day(s)</td>
-                  <td className="py-3 px-3 border border-slate-200 text-right font-mono">₹{currentVehicle.driverBataPerDay}</td>
-                  <td className="py-3 px-4 border border-slate-200 text-right font-mono font-bold">₹{driverBata.toLocaleString()}</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-mono">{tripDays} Day(s)</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-right font-mono">₹{currentVehicle.driverBataPerDay}</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200 text-right font-mono font-bold">₹{driverBata.toLocaleString()}</td>
                 </tr>
 
                 <tr>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-medium">3</td>
-                  <td className="py-3 px-4 border border-slate-200">
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-medium">3</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200">
                     <strong className="text-slate-900 block">Tollway Toll Fees, Parking & State Permits (Estimate)</strong>
-                    <span className="text-slate-500 text-[11px]">Highway FASTag electronic tolls & destination interstate permit charges</span>
+                    <span className="text-slate-500 text-[11px] print:text-[9px]">Highway FASTag electronic tolls & destination interstate permit charges</span>
                   </td>
-                  <td className="py-3 px-3 border border-slate-200 text-center font-mono">Route Est.</td>
-                  <td className="py-3 px-3 border border-slate-200 text-right font-mono">-</td>
-                  <td className="py-3 px-4 border border-slate-200 text-right font-mono font-bold">₹{tollParking.toLocaleString()}</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-center font-mono">Route Est.</td>
+                  <td className="py-3 print:py-1.5 px-3 print:px-2 border border-slate-200 text-right font-mono">-</td>
+                  <td className="py-3 print:py-1.5 px-4 print:px-2 border border-slate-200 text-right font-mono font-bold">₹{tollParking.toLocaleString()}</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
           {/* Amount In Words & Totals Block */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start mb-8 text-xs">
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200">
-              <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px] block mb-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 print:gap-2.5 items-start mb-8 print:mb-2.5 text-xs print:text-[10.5px] page-break-avoid">
+            <div className="bg-slate-50 p-4 print:p-2.5 rounded-xl border border-slate-200">
+              <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px] print:text-[9px] block mb-1">
                 Amount in Words:
               </span>
-              <p className="font-bold text-slate-800 text-xs italic">
+              <p className="font-bold text-slate-800 text-xs print:text-[10.5px] italic">
                 {numberToWordsINR(grandTotal)}
               </p>
               
-              <div className="mt-3 pt-3 border-t border-slate-200 space-y-1 text-[11px] text-slate-600">
+              <div className="mt-3 print:mt-1.5 pt-3 print:pt-1.5 border-t border-slate-200 space-y-1 print:space-y-0.5 text-[11px] print:text-[9.5px] text-slate-600">
                 <p>
                   <strong>Billing Mode:</strong> {docMode === 'quotation' ? 'Estimated Commercial Fare (100% Zero GST Added)' : 'Settled via Offline Payment'}
                 </p>
@@ -743,7 +780,7 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
               </div>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+            <div className="bg-slate-50 p-4 print:p-2.5 rounded-xl border border-slate-200 space-y-2 print:space-y-1">
               <div className="flex justify-between text-slate-600">
                 <span>Vehicle Distance Charge ({distanceKm} KM @ ₹{ratePerKm}/km):</span>
                 <span className="font-mono font-bold">₹{baseFare.toLocaleString()}</span>
@@ -757,11 +794,11 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
                 <span className="font-mono font-bold">₹{tollParking.toLocaleString()}</span>
               </div>
 
-              <div className="border-t-2 border-slate-800 pt-2 flex justify-between items-baseline">
-                <span className="text-sm font-black text-slate-900">
+              <div className="border-t-2 border-slate-800 pt-2 print:pt-1 flex justify-between items-baseline">
+                <span className="text-sm print:text-xs font-black text-slate-900">
                   {docMode === 'quotation' ? 'Total Estimated Price:' : 'Total Amount Paid:'}
                 </span>
-                <span className="text-xl font-black text-[#0A3D73] font-mono">
+                <span className="text-xl print:text-base font-black text-[#0A3D73] font-mono">
                   ₹{grandTotal.toLocaleString()}
                 </span>
               </div>
@@ -769,8 +806,8 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           </div>
 
           {/* Terms & Conditions (Quotation vs Invoice) */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 mb-8 text-[11px] text-slate-600 space-y-1">
-            <strong className="text-slate-900 block uppercase text-[11px] mb-1">
+          <div className="p-4 print:p-2 bg-slate-50 rounded-xl border border-slate-200 mb-8 print:mb-2 text-[11px] print:text-[9px] print:leading-tight text-slate-600 space-y-1 print:space-y-0.5 page-break-avoid">
+            <strong className="text-slate-900 block uppercase text-[11px] print:text-[9px] mb-1">
               {docMode === 'quotation' ? 'Quotation Terms & Travel Policies (Standard Transparent Market Pricing):' : 'Official Invoice Notes & Verification:'}
             </strong>
             <p>1. Kilometers and duty hours calculated garage-to-garage from Bangalore dispatch center as per Karnataka State Commercial Transport guidelines.</p>
@@ -784,29 +821,29 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
           </div>
 
           {/* Footer: QR Code & Authorized Signature */}
-          <div className="pt-6 border-t-2 border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-6 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="p-2 border border-slate-300 rounded-lg bg-white shadow-xs">
-                <QrCode size={48} className="text-slate-800" />
+          <div className="pt-6 print:pt-2 border-t-2 border-slate-200 flex flex-col sm:flex-row print:flex-row items-center justify-between gap-6 print:gap-2 text-xs print:text-[10px] page-break-avoid">
+            <div className="flex items-center gap-3 print:gap-2">
+              <div className="p-2 print:p-1 border border-slate-300 rounded-lg bg-white shadow-xs">
+                <QrCode size={48} className="text-slate-800 print:w-8 print:h-8" />
               </div>
               <div>
-                <span className="font-bold text-slate-900 block">Verify Digitally</span>
-                <span className="text-[10px] text-slate-500">
+                <span className="font-bold text-slate-900 block print:text-[10px]">Verify Digitally</span>
+                <span className="text-[10px] print:text-[8.5px] text-slate-500">
                   {docMode === 'quotation' ? `Quote Ref: ${quotationNumber}` : `Digital Invoice ID: ${bookingId}`}
                 </span>
               </div>
             </div>
 
-            <div className="text-center sm:text-right">
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mb-1">
+            <div className="text-center sm:text-right print:text-right">
+              <span className="inline-flex items-center gap-1 text-[11px] print:text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 mb-1">
                 ✓ DIGITALLY VERIFIED & APPROVED
               </span>
-              <p className="text-xs font-black text-slate-900">For BookMyRoute Travel Logistics</p>
-              <p className="text-[10px] text-slate-400">Authorized Dispatch Desk</p>
+              <p className="text-xs print:text-[10px] font-black text-slate-900">For BookMyRoute Travel Logistics</p>
+              <p className="text-[10px] print:text-[8.5px] text-slate-400">Authorized Dispatch Desk</p>
             </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-slate-100 text-center text-[10px] text-slate-400">
+          <div className="mt-8 print:mt-1.5 pt-4 print:pt-1 border-t border-slate-100 text-center text-[10px] print:text-[8px] text-slate-400">
             Thank you for choosing BookMyRoute. For 24/7 route support or inquiries, call {CONTACT_PHONE} or email {CONTACT_EMAIL}.
           </div>
 

@@ -16,7 +16,7 @@ export default function FloatingActions() {
       {/* 1. Sleek, Small & Animated Floating WhatsApp Icon Button */}
       <aside 
         aria-label="WhatsApp Contact" 
-        className="fixed bottom-20 md:bottom-8 right-4 sm:right-6 z-50 flex items-center pointer-events-auto"
+        className="fixed bottom-20 md:bottom-8 right-4 sm:right-6 z-50 flex items-center pointer-events-auto print:hidden"
       >
         <a
           href={`https://wa.me/${CONTACT_PHONE_WA}?text=Hi%2C%20I%20am%20looking%20for%20a%20vehicle%20rental%20quote%20on%20BookMyRoute.`}
@@ -49,7 +49,7 @@ export default function FloatingActions() {
       {/* 2. Mobile Sticky Bottom Bar (Tejas Travels Pattern) */}
       <nav 
         aria-label="Mobile Navigation" 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0F355C] text-white border-t border-slate-700/50 shadow-[0_-10px_25px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0F355C] text-white border-t border-slate-700/50 shadow-[0_-10px_25px_rgba(0,0,0,0.25)] pb-[env(safe-area-inset-bottom)] print:hidden"
       >
         <div className="grid grid-cols-5 h-16 items-center">
           <Link

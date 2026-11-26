@@ -26,7 +26,7 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-white pt-16 pb-12 border-t-[6px] border-[#FF7020] relative overflow-hidden">
+    <footer className="bg-white pt-16 pb-32 sm:pb-16 border-t-[6px] border-[#FF7020] relative overflow-hidden print:hidden">
       {/* Decorative top fade */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#FF7020]/20 via-[#FF7020]/60 to-[#FF7020]/20"></div>
       
@@ -139,7 +139,7 @@ export default function Footer() {
           <p className="text-center md:text-left">
             &copy; {new Date().getFullYear()} BookMyRoute Travels (India) Private Limited. All rights reserved.
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center sm:justify-end gap-x-4 gap-y-2 text-center">
             <Link href="/invoice" className="hover:text-[#FF7020] transition-colors font-bold text-[#0A3D73]">Download Invoice</Link>
             <Link href="/white-board-drivers" className="hover:text-[#FF7020] transition-colors">White Board Drivers</Link>
             <Link href="/homestays" className="hover:text-[#FF7020] transition-colors">Homestays</Link>

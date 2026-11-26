@@ -355,10 +355,11 @@ export default function BookTripModal({
                     <input
                       type="text"
                       required
+                      autoComplete="name"
                       placeholder="e.g. Ramesh K"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -373,12 +374,14 @@ export default function BookTripModal({
                     </span>
                     <input
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       required
                       maxLength={10}
                       placeholder="9876543210"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                      className="w-full h-10 px-2.5 text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none bg-transparent"
+                      className="w-full h-10 px-2.5 text-base sm:text-sm font-semibold text-slate-800 focus:outline-none bg-transparent"
                     />
                   </div>
                 </div>
@@ -408,7 +411,7 @@ export default function BookTripModal({
                       placeholder="e.g. Uttarahalli / Indiranagar"
                       value={pickupLocation}
                       onChange={(e) => setPickupLocation(e.target.value)}
-                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -424,7 +427,7 @@ export default function BookTripModal({
                       placeholder="e.g. Coorg, Mysore, Airport"
                       value={dropLocation}
                       onChange={(e) => setDropLocation(e.target.value)}
-                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
+                      className="w-full h-10 pl-8 pr-2.5 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-sm font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] transition-colors"
                     />
                   </div>
                 </div>
@@ -440,7 +443,7 @@ export default function BookTripModal({
                     <select
                       value={tripType}
                       onChange={(e) => setTripType(e.target.value as any)}
-                      className="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] appearance-none cursor-pointer pr-7"
+                      className="w-full h-10 px-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base sm:text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73] appearance-none cursor-pointer pr-7"
                     >
                       <option>Outstation Round Trip</option>
                       <option>Local 8Hr/80Km</option>
@@ -461,13 +464,13 @@ export default function BookTripModal({
                       required
                       value={travelDate}
                       onChange={(e) => setTravelDate(e.target.value)}
-                      className="w-full h-10 px-1.5 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 px-1.5 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                     />
                     <input
                       type="time"
                       value={travelTime}
                       onChange={(e) => setTravelTime(e.target.value)}
-                      className="w-full h-10 px-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                      className="w-full h-10 px-1 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-[11px] font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                     />
                   </div>
                 </div>
@@ -482,7 +485,7 @@ export default function BookTripModal({
                     type="date"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
+                    className="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-200 text-base sm:text-xs font-semibold text-slate-800 focus:bg-white focus:outline-none focus:border-[#0A3D73]"
                   />
                 </div>
               )}

@@ -76,6 +76,97 @@
   }
 }
 
+/* =========================================================================
+   BULLETPROOF PRINT STYLES FOR CLEAN QUOTATIONS & TAX INVOICES (ZERO BLEED)
+   ========================================================================= */
+@media print {
+  /* Strictly hide all site chrome, headers, footers, mobile bottom bars, floating CTAs */
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden,
+  [data-print="hide"],
+  #__next > header,
+  #__next > footer {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+
+  /* Force printable area to fill page without shadows or extra page breaks */
+  #printable-area {
+    box-shadow: none !important;
+    border: 1.5px solid #cbd5e1 !important;
+    border-radius: 12px !important;
+    padding: 18px 24px !important;
+    margin: 0 auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+    break-after: avoid !important;
+  }
+
+  /* Compact margins inside printable document during print */
+  #printable-area .mb-8,
+  #printable-area .mb-6 {
+    margin-bottom: 10px !important;
+  }
+
+  #printable-area .p-8,
+  #printable-area .p-12 {
+    padding: 16px !important;
+  }
+
+  #printable-area .p-4 {
+    padding: 8px 12px !important;
+  }
+
+  #printable-area .py-3 {
+    padding-top: 5px !important;
+    padding-bottom: 5px !important;
+  }
+
+  #printable-area .gap-6 {
+    gap: 10px !important;
+  }
+
+  #printable-area img {
+    max-height: 48px !important;
+  }
+
+  /* Prevent split rows in tables */
+  table, tr, td, th {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .page-break-avoid {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+}
+
 @layer utilities {
   .animate-float {
     animation: float 6s ease-in-out infinite;

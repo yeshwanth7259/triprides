@@ -28,7 +28,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
+    <header className={`fixed top-0 w-full z-50 transition-all duration-300 print:hidden ${isScrolled ? 'bg-white shadow-md' : 'bg-white'}`}>
       {/* Top Bar for Contact Info */}
       <div className="bg-[#0A3D73] text-blue-100 text-xs py-1.5 hidden md:block border-b border-blue-900/40">
         <div className="w-full max-w-[1536px] mx-auto px-4 sm:px-6 flex justify-between items-center whitespace-nowrap">

@@ -331,8 +331,9 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                   <input
                     type="text"
                     required
+                    autoComplete="name"
                     placeholder="Enter your full name..."
-                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-base sm:text-sm"
                     value={form.name}
                     onChange={e => setForm({ ...form, name: e.target.value })}
                   />
@@ -347,9 +348,11 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                 <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
                     required
                     placeholder="Enter 10-digit mobile number (e.g. 98765 43210)..."
-                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    className="w-full bg-transparent px-4 py-3 outline-none text-slate-800 font-semibold text-base sm:text-sm"
                     value={form.phone}
                     onChange={e => setForm({ ...form, phone: e.target.value })}
                   />
@@ -389,7 +392,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                   <input
                     type="date"
                     required
-                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm cursor-pointer"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-base sm:text-sm cursor-pointer"
                     value={form.date}
                     onChange={e => setForm({ ...form, date: e.target.value })}
                   />
@@ -403,7 +406,7 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                   <input
                     type="time"
                     required
-                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm cursor-pointer"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-base sm:text-sm cursor-pointer"
                     value={form.time}
                     onChange={e => setForm({ ...form, time: e.target.value })}
                   />
@@ -416,10 +419,11 @@ _Please send me the formal quotation and confirm vehicle availability._`;
                 <div className="relative border rounded-2xl border-slate-200 flex items-center focus-within:border-[#0A3D73] bg-slate-50/50 hover:border-slate-300 transition-colors">
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     placeholder="Count"
                     required
-                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-sm"
+                    className="w-full bg-transparent px-3.5 py-3 outline-none text-slate-800 font-semibold text-base sm:text-sm"
                     value={form.passengers}
                     onChange={e => setForm({ ...form, passengers: e.target.value })}
                   />

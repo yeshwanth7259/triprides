@@ -21,12 +21,12 @@ test.describe('Quotation & Tax Invoice Math Validation (Read-Only)', () => {
 
   test('Tariff calculation displays estimated total fare correctly', async ({ page }) => {
     // Check that total estimated fare element exists
-    const totalFareLabel = page.getByText(/Total Estimated Fare/i).first();
-    await expect(totalFareLabel).toBeVisible({ timeout: 15000 });
+    const totalFareDisplay = page.getByText(/TOTAL ESTIMATED FARE|Total Amount|Net Payable/i).first();
+    await expect(totalFareDisplay).toBeVisible({ timeout: 15000 });
 
-    // Verify emerald total fare value containing rupee sign is rendered
-    const totalFareValue = page.locator('span.text-emerald-600, div:has-text("Total Estimated Fare") span').filter({ hasText: /₹/ }).first();
-    await expect(totalFareValue).toBeVisible({ timeout: 10000 });
+    // Verify rupee amount is rendered in the printable area
+    const fareValue = page.locator('#printable-area').getByText(/₹[\s]*[0-9,]+/).first();
+    await expect(fareValue).toBeVisible({ timeout: 10000 });
   });
 
   test('Print and PDF action button is available', async ({ page }) => {
