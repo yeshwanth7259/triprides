@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   MapPin, Users, Plane, Car, Bus, Map, Clock, CheckCircle, 
   FileText, Send, Download, Mail, Calendar, Ticket, Phone, ArrowRight, ShieldCheck,
-  Star, Navigation, Sparkles, ExternalLink, UserCheck
+  Star, Navigation, Sparkles, ExternalLink, UserCheck, ChevronRight, Award, Zap
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -20,6 +20,7 @@ import { WHITE_BOARD_DRIVERS } from '../lib/whiteBoardDriversData';
 import { useBookingModal } from '../components/BookingModalContext';
 import PlaceAutocompleteInput from '../components/PlaceAutocompleteInput';
 import { PlaceItem } from '../lib/indiaCitiesData';
+import { FLEET_PRICING, VehiclePricing } from '../lib/quotationData';
 
 export default function Home() {
   const { openBookingModal } = useBookingModal();
@@ -82,6 +83,133 @@ export default function Home() {
     ]
   };
 
+  // Debounced Lead Capture for Abandoned Incomplete Inquiries (Captures user details if they leave mid-way)
+  useEffect(() => {
+    const cleanPhone = (form.phone || '').replace(/\D/g, '');
+    if (cleanPhone.length >= 10 && form.name.trim().length >= 2) {
+      const timer = setTimeout(() => {
+        fetch('/api/leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            phone: form.phone,
+            service: `${rideMode.toUpperCase()} - ${form.vehicleInfo || 'Outstation Travel'}`,
+            pickup: form.pickup,
+            destination: form.destination,
+            travelDate: form.date,
+            travelTime: form.time,
+            passengers: form.passengers,
+            status: 'ABANDONED_INCOMPLETE',
+            source: 'Homepage Form (Incomplete / Mid-Way)',
+            notes: 'User filled contact and travel details but left without submitting. Hot lead for fast follow-up!'
+          })
+        }).catch(() => {});
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [form.name, form.phone, form.pickup, form.destination, form.date, form.time, form.vehicleInfo, rideMode]);
+
+  const getCalculatedKm = () => {
+    if (rideMode === 'local') return 80;
+    if (rideMode === 'airport') return 45;
+    if (selectedPlace && selectedPlace.distanceKmFromBangalore > 0) {
+      return outstationType === 'roundtrip' 
+        ? Math.round(selectedPlace.distanceKmFromBangalore * 2) 
+        : selectedPlace.distanceKmFromBangalore;
+    }
+    return outstationType === 'roundtrip' ? 520 : 260;
+  };
+
+  const calculateFareForVehicle = (v: VehiclePricing) => {
+    const km = getCalculatedKm();
+    if (rideMode === 'local') {
+      return {
+        billedKm: 80,
+        rate: v.localExtraKmRate,
+        bata: 0,
+        tolls: 0,
+        totalFare: v.localPackageRate
+      };
+    }
+    if (rideMode === 'airport') {
+      return {
+        billedKm: 45,
+        rate: v.ratePerKm,
+        bata: 0,
+        tolls: 120,
+        totalFare: (45 * v.ratePerKm) + 120
+      };
+    }
+    const days = Math.max(1, Math.ceil(km / 500));
+    const minKm = days * v.minKmPerDay;
+    const billedKm = Math.max(km, minKm);
+    const bata = days * v.driverBataPerDay;
+    const tolls = Math.round(km * 0.7);
+    const totalFare = (billedKm * v.ratePerKm) + bata + tolls;
+    return {
+      billedKm,
+      rate: v.ratePerKm,
+      bata,
+      tolls,
+      totalFare
+    };
+  };
+
+  const bookSpecificVehicle = (v: VehiclePricing) => {
+    const custName = form.name.trim() || 'Valued Passenger';
+    const custPhone = form.phone.trim() || 'Not Provided';
+    const pickupLoc = form.pickup.trim() || 'Bangalore';
+    const dropLoc = form.destination.trim() || 'Outstation Destination';
+    const travelDate = form.date || 'Flexible Date';
+    const travelTime = form.time || '06:00';
+    const pax = form.passengers || v.seats.replace(/[^0-9]/g, '').slice(0, 2) || '4';
+
+    const calculated = calculateFareForVehicle(v);
+
+    const details = `*🚕 BookMyRoute Official Trip Booking & Quotation Request*
+----------------------------------------
+*Passenger Name:* ${custName}
+*Phone / WhatsApp:* ${custPhone}
+*Vehicle Selected:* ${v.name} (${v.seats})
+*Trip Mode:* ${rideMode.toUpperCase()} (${outstationType === 'roundtrip' ? 'Round Trip' : 'One-Way Drop'})
+*Pickup Location:* ${pickupLoc}
+*Destination / Drop:* ${dropLoc}
+*Travel Date:* ${travelDate} at ${travelTime}
+*Passengers:* ${pax}
+*Rate Tariff:* ₹${v.ratePerKm}/km
+*Total Estimated Price:* ₹${calculated.totalFare.toLocaleString()} (Zero Hidden Charges)
+----------------------------------------
+_Please confirm booking and vehicle assignment._`;
+
+    // Save lead as BOOKING_CONFIRMED (dispatches quotation email to bookmyroute06@gmail.com)
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: custName,
+        phone: custPhone,
+        service: `${v.name}`,
+        pickup: pickupLoc,
+        destination: dropLoc,
+        travelDate,
+        travelTime,
+        passengers: Number(pax) || 4,
+        vehicle: v.name,
+        distanceKm: calculated.billedKm,
+        ratePerKm: v.ratePerKm,
+        driverBata: calculated.bata,
+        tollEstimate: calculated.tolls,
+        totalFare: calculated.totalFare,
+        status: 'BOOKING_CONFIRMED',
+        source: 'Tejas Fleet Tariff Matrix'
+      })
+    }).catch(() => {});
+
+    window.open(`https://wa.me/${CONTACT_PHONE_WA}?text=${encodeURIComponent(details)}`, '_blank');
+  };
+
   const getEstimatedPrice = () => {
     const selected = form.vehicleInfo || vehicleOptions[activeTab]?.[0] || '';
     if (selected.includes('Sedan')) return '₹12/km (Local: ₹1,800)';
@@ -131,7 +259,7 @@ export default function Home() {
 ----------------------------------------
 _Please send me the formal quotation and confirm vehicle availability._`;
 
-    // Save lead in backend
+    // Save lead in backend as BOOKING_CONFIRMED (dispatches quotation email to bookmyroute06@gmail.com)
     fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -142,7 +270,9 @@ _Please send me the formal quotation and confirm vehicle availability._`;
         pickup: pickupLoc,
         destination: dropLoc,
         travel_date: travelDate,
-        passengers: Number(pax) || 4
+        passengers: Number(pax) || 4,
+        status: 'BOOKING_CONFIRMED',
+        source: 'Homepage WhatsApp Button'
       })
     }).catch(() => {});
 
@@ -494,6 +624,121 @@ _Please send me the formal quotation and confirm vehicle availability._`;
               </div>
             </div>
           </form>
+
+          {/* =========================================================================
+              TEJAS TRAVELS STYLE FLEET TARIFF COMPARISON (SHOWN WHEN USER ENTERS ROUTE)
+              ========================================================================= */}
+          <div className="bg-slate-50/80 border-t border-slate-200 p-6 sm:p-8">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-6">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-[#0A3D73] text-white text-[10px] font-black uppercase px-2 py-0.5 rounded">
+                    Tejas Travels Benchmark
+                  </span>
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    ✓ 100% Transparent Market Rates
+                  </span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-black text-[#0A3D73] font-display mt-1">
+                  Guaranteed Route Tariff: {form.pickup.trim() || 'Bangalore'} ➔ {form.destination.trim() || 'Outstation / Local'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Estimated Travel Distance: <strong className="text-slate-800 font-mono">{getCalculatedKm()} KM</strong> ({rideMode === 'outstation' ? (outstationType === 'roundtrip' ? 'Round Trip' : 'One-Way Drop') : rideMode === 'local' ? 'Local 8Hr/80Km' : 'Airport Transfer'}). Zero hidden fees.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-start md:self-center">
+                <Link
+                  href={`/invoice?name=${encodeURIComponent(form.name)}&phone=${encodeURIComponent(form.phone)}&pickup=${encodeURIComponent(form.pickup)}&drop=${encodeURIComponent(form.destination)}&vehicle=${encodeURIComponent(form.vehicleInfo)}&date=${encodeURIComponent(form.date)}`}
+                  className="bg-white hover:bg-slate-100 text-[#0A3D73] border border-slate-300 font-black text-xs py-2 px-3.5 rounded-xl transition-all shadow-xs flex items-center gap-1.5"
+                >
+                  <FileText size={14} className="text-[#FF7020]" />
+                  <span>Custom Quote PDF</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Grid of All Vehicles with Real-Time Calculated Fares */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {FLEET_PRICING.slice(0, 8).map((v) => {
+                const fareData = calculateFareForVehicle(v);
+
+                return (
+                  <div
+                    key={v.id}
+                    className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs hover:shadow-lg hover:border-[#0A3D73] transition-all flex flex-col justify-between group"
+                  >
+                    <div>
+                      <div className="relative h-32 rounded-xl bg-slate-100 overflow-hidden mb-3">
+                        <img
+                          src={v.image}
+                          alt={v.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-xs text-white text-[10px] font-black px-2 py-0.5 rounded-md">
+                          {v.seats}
+                        </div>
+                      </div>
+
+                      <h4 className="font-black text-sm text-slate-900 leading-snug line-clamp-1 group-hover:text-[#0A3D73] transition-colors">
+                        {v.shortName}
+                      </h4>
+
+                      <div className="mt-2 space-y-1 text-[11px] text-slate-500">
+                        <div className="flex justify-between">
+                          <span>Base Tariff:</span>
+                          <span className="font-semibold text-slate-800 font-mono">₹{v.ratePerKm}/km</span>
+                        </div>
+                        {fareData.bata > 0 && (
+                          <div className="flex justify-between">
+                            <span>Driver Bata:</span>
+                            <span className="font-semibold text-slate-800 font-mono">₹{fareData.bata}</span>
+                          </div>
+                        )}
+                        {fareData.tolls > 0 && (
+                          <div className="flex justify-between">
+                            <span>Tolls Est.:</span>
+                            <span className="font-semibold text-slate-800 font-mono">₹{fareData.tolls}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 mt-3 border-t border-slate-100">
+                      <div className="flex items-baseline justify-between mb-2">
+                        <span className="text-[10px] font-bold uppercase text-slate-400">Total Est. Fare:</span>
+                        <span className="text-base font-black text-emerald-700 font-mono">
+                          ₹{fareData.totalFare.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => bookSpecificVehicle(v)}
+                        className="w-full bg-[#0A3D73] hover:bg-[#082e56] text-white font-black text-xs py-2 px-3 rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Car size={13} />
+                        <span>Book {v.shortName.split(' ')[0]}</span>
+                      </button>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-500">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle size={14} className="text-emerald-600" />
+                <span>Zero advance deposit required • Pay directly to driver after trip</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <Mail size={14} className="text-[#0A3D73]" />
+                <span>Formal quotations dispatched to <strong>bookmyroute06@gmail.com</strong></span>
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
 

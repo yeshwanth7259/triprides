@@ -4,9 +4,11 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Car, ShieldCheck, Phone, Star, MapPin, CheckCircle, 
-  Sparkles, MessageSquare, ArrowRight, 
-  Clock, Award, Fuel, Check, X, Shield, Calendar, Compass, UserCheck,
-  FileText, UploadCloud, ChevronRight, HelpCircle, AlertCircle, Camera, Image as ImageIcon
+  Sparkles, MessageSquare, ArrowRight, Clock, Award, 
+  Fuel, Check, X, Shield, Calendar, Compass, UserCheck,
+  FileText, UploadCloud, ChevronRight, HelpCircle, AlertCircle, 
+  Camera, Image as ImageIcon, CheckCircle2, Navigation,
+  Briefcase, Moon, DollarSign, Users, KeyRound
 } from 'lucide-react';
 import { 
   WHITE_BOARD_DRIVERS, 
@@ -19,9 +21,9 @@ import {
 } from '../../lib/fleetData';
 
 export default function WhiteBoardDriversPage() {
-  const driver = WHITE_BOARD_DRIVERS[0]; // Yeshwanth K
+  const driver = WHITE_BOARD_DRIVERS[0]; // Yeshwanth K details
 
-  // Active section tab: 'hire' (hire Yeshwanth / view pricing) or 'onboarding' (driver join form)
+  // Active section tab: 'hire' (hire driver / view pricing) or 'onboarding' (driver join form)
   const [activeTab, setActiveTab] = useState<'hire' | 'onboarding'>('hire');
 
   React.useEffect(() => {
@@ -41,15 +43,16 @@ export default function WhiteBoardDriversPage() {
   const [hireForm, setHireForm] = useState({
     customerName: '',
     customerPhone: '',
-    tripType: 'Outstation Trip (Personal Car)',
+    tripType: 'Local 8Hr (Bangalore City)',
     tripDate: '',
-    durationDays: '2',
+    durationDays: '1',
     pickupAddress: '',
     destination: '',
     yourCarModel: 'Sedan / SUV',
     transmission: 'Automatic'
   });
   const [hireSuccess, setHireSuccess] = useState(false);
+  const [isSubmittingHire, setIsSubmittingHire] = useState(false);
 
   // Driver Onboarding Form state
   const [onboardForm, setOnboardForm] = useState({
@@ -107,42 +110,67 @@ export default function WhiteBoardDriversPage() {
     }
   };
 
-  const handleHireSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const calculateDriverFare = () => {
+    if (hireForm.tripType.includes('Local 4Hr')) return 499;
+    if (hireForm.tripType.includes('Local 8Hr')) return 899;
+    if (hireForm.tripType.includes('Outstation Round')) {
+      const days = parseInt(hireForm.durationDays) || 1;
+      return days * 1200;
+    }
+    if (hireForm.tripType.includes('One-Way')) return 1499;
+    return 899;
+  };
 
-    const text = `*🚗 BookMyRoute - Hire Driver for Personal Car*
+  const handleHireSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingHire(true);
+
+    const calculatedFare = calculateDriverFare();
+
+    const text = `*🚗 BookMyRoute - Hire Verified Driver for Personal Car*
 ----------------------------------------
-*Driver Requested:* ${driver.name}
+*Driver Service:* Verified Personal Chauffeur
 *Customer Name:* ${hireForm.customerName}
 *Customer Mobile:* +91 ${hireForm.customerPhone.replace(/^\+?91/, '').trim()}
-*Trip Mode:* ${hireForm.tripType}
-*Travel Date:* ${hireForm.tripDate} (${hireForm.durationDays} Days)
+*Trip Package:* ${hireForm.tripType}
+*Duration:* ${hireForm.durationDays} Day(s)
+*Travel Date:* ${hireForm.tripDate || 'Immediate / Scheduled'}
 *Pickup Address:* ${hireForm.pickupAddress}
-*Destination / Route:* ${hireForm.destination}
-*Customer Vehicle:* ${hireForm.yourCarModel} (${hireForm.transmission})
+*Destination / Route:* ${hireForm.destination || 'Bangalore City'}
+*Customer Car:* ${hireForm.yourCarModel} (${hireForm.transmission})
+*Estimated Fare:* ₹${calculatedFare} (Market Rate)
 ----------------------------------------
-_Please confirm Yeshwanth K's availability and tariff quotation._`;
+_Please confirm chauffeur dispatch and quotation for my car._`;
 
-    // Also send to backend leads API
-    fetch('/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_name: hireForm.customerName,
-        phone: hireForm.customerPhone,
-        service_type: 'White Board Driver Hire',
-        vehicle_type: hireForm.yourCarModel,
-        pickup: hireForm.pickupAddress,
-        destination: hireForm.destination,
-        travel_date: hireForm.tripDate
-      })
-    }).catch(() => {});
+    // Save lead to backend and trigger email to bookmyroute06@gmail.com
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: hireForm.customerName,
+          phone: hireForm.customerPhone,
+          service: `White Board Driver (${hireForm.tripType})`,
+          pickup: hireForm.pickupAddress,
+          destination: hireForm.destination || 'Bangalore City',
+          travelDate: hireForm.tripDate,
+          passengers: 1,
+          vehicle: `${hireForm.yourCarModel} (${hireForm.transmission})`,
+          totalFare: calculatedFare,
+          status: 'DRIVER_ENQUIRY',
+          source: 'White Board Drivers Page'
+        })
+      });
+    } catch (err) {
+      console.error('Lead error', err);
+    }
 
+    setIsSubmittingHire(false);
     window.open(`https://wa.me/${CONTACT_PHONE_WA}?text=${encodeURIComponent(text)}`, '_blank');
     setHireSuccess(true);
   };
 
-  const handleOnboardSubmit = (e: React.FormEvent) => {
+  const handleOnboardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const photoStatus = driverPhotoFile ? `✓ Attached (${driverPhotoFile.name} - ${(driverPhotoFile.size / 1024).toFixed(0)} KB)` : 'Ready to Send on WhatsApp';
@@ -168,19 +196,25 @@ _Please confirm Yeshwanth K's availability and tariff quotation._`;
 💼 *Previous Background:* ${onboardForm.previousExperience}
 ✅ *Clean Driving Record:* ${onboardForm.noAccidentRecord ? 'Declared Clean & Verified' : 'Standard'}
 ----------------------------------------
-_Applicant has uploaded DL documents & photo. Please verify and approve driver profile on BookMyRoute._`;
+_Applicant has submitted onboarding details on BookMyRoute._`;
 
-    // Also send to backend leads API
-    fetch('/api/leads', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_name: `[DRIVER APPLICANT] ${onboardForm.fullName}`,
-        phone: onboardForm.mobileNumber,
-        service_type: 'Driver Onboarding Application',
-        notes: `DL: ${onboardForm.dlNumber}, Exp: ${onboardForm.experienceYears}, Loc: ${onboardForm.cityArea}, Photo: ${driverPhotoFile ? 'Yes' : 'No'}, DL Docs: ${dlFrontFile ? 'Yes' : 'No'}`
-      })
-    }).catch(() => {});
+    // Save driver application to leads API
+    try {
+      await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: `[DRIVER APPLICATION] ${onboardForm.fullName}`,
+          phone: onboardForm.mobileNumber,
+          service: 'Driver Partner Onboarding',
+          pickup: onboardForm.cityArea,
+          destination: 'Bangalore Chauffeur Fleet',
+          status: 'DRIVER_ENQUIRY',
+          source: 'Driver Partner Portal',
+          notes: `DL: ${onboardForm.dlNumber}, Experience: ${onboardForm.experienceYears}, Transmission: ${onboardForm.transmissionSkill}`
+        })
+      });
+    } catch {}
 
     window.open(`https://wa.me/${CONTACT_PHONE_WA}?text=${encodeURIComponent(text)}`, '_blank');
     setOnboardSubmitted(true);
@@ -189,8 +223,8 @@ _Applicant has uploaded DL documents & photo. Please verify and approve driver p
   return (
     <div className="min-h-screen bg-slate-50 pt-20 pb-20 font-sans">
       
-      {/* 1. Official Banner Uploaded by User (Looking for a Trusted Driver for Your Own Car?) */}
-      <section className="relative w-full bg-[#0A3D73] overflow-hidden mb-6 shadow-md">
+      {/* 1. Official Banner (Edge-to-Edge) */}
+      <section className="relative w-full bg-[#0A3D73] overflow-hidden mb-6 shadow-md -mt-2">
         <h1 className="sr-only">Hire a Trusted Driver for Your Own Car | BookMyRoute Driver on Demand</h1>
         <div className="w-full">
           <img
@@ -230,585 +264,527 @@ _Applicant has uploaded DL documents & photo. Please verify and approve driver p
         </div>
       </section>
 
-      {/* TAB 1: HIRE DRIVER & VIEW MARKET PRICING */}
+      {/* TAB 1: HIRE DRIVER & VIEW MARKET PRICING (DRIVEU PATTERN) */}
       {activeTab === 'hire' && (
-        <div className="container-x max-w-6xl mx-auto px-4 space-y-10">
+        <div className="container-x max-w-6xl mx-auto px-4 space-y-12">
 
-          {/* Featured Chauffeur: Yeshwanth K */}
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden">
-            <div className="bg-gradient-to-r from-[#0A3D73] to-[#0f4f96] p-6 sm:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
-                <div className="relative">
-                  <img
-                    src={driver.avatar}
-                    alt={driver.name}
-                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl object-cover border-4 border-white/20 shadow-lg"
-                  />
-                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1 rounded-full shadow-md" title="Verified Driver">
-                    <CheckCircle size={18} />
-                  </div>
-                </div>
+          {/* DriveU Hero Header */}
+          <div className="text-center max-w-3xl mx-auto">
+            <span className="text-xs font-black uppercase tracking-wider text-[#FF7020] bg-orange-50 px-3 py-1 rounded-full border border-orange-200/60 inline-flex items-center gap-1.5 mb-3">
+              <ShieldCheck size={14} className="text-[#0A3D73]" />
+              <span>Bangalore's Most Trusted Driver Network</span>
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-black text-[#0A3D73] font-display tracking-tight">
+              Hire Temporary & Professional Drivers at Your Convenience
+            </h2>
+            <p className="text-slate-600 text-xs sm:text-sm mt-2 leading-relaxed">
+              Sit back and relax in your personal car (White Board). Verified, background-checked chauffeurs for daily city commutes, late-night events, outstation road trips & corporate travel.
+            </p>
+          </div>
 
-                <div>
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                    <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{driver.name}</h2>
-                    <span className="bg-emerald-500/20 border border-emerald-400 text-emerald-300 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
-                      ✓ Verified Master Chauffeur
-                    </span>
-                  </div>
-                  <p className="text-blue-100 text-xs sm:text-sm font-medium mb-3">
-                    Professional Personal Chauffeur (Sedan & SUV Specialist) • Based in Bengaluru
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs">
-                    <span className="bg-white/10 px-3 py-1 rounded-lg flex items-center gap-1 font-bold">
-                      <Star size={13} className="fill-amber-400 text-amber-400" />
-                      {driver.rating} ({driver.reviewsCount} Reviews)
-                    </span>
-                    <span className="bg-white/10 px-3 py-1 rounded-lg font-bold">
-                      🏆 {driver.experienceYears}+ Years Highway Driving
-                    </span>
-                    <span className="bg-white/10 px-3 py-1 rounded-lg font-bold">
-                      🛡️ {driver.tripsCompleted}+ Safe Trips
-                    </span>
-                  </div>
-                </div>
+          {/* DriveU 4 Trust Pillars */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-center">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#0A3D73] flex items-center justify-center mx-auto mb-3">
+                <ShieldCheck size={24} />
               </div>
-
-              {/* Instant Call / WhatsApp Buttons */}
-              <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 w-full md:w-auto shrink-0">
-                <a
-                  href={`tel:${CONTACT_PHONE_TEL}`}
-                  className="bg-white hover:bg-slate-100 text-[#0A3D73] font-black text-xs sm:text-sm px-6 py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2"
-                >
-                  <Phone size={15} />
-                  <span>Call {CONTACT_PHONE}</span>
-                </a>
-
-                <button
-                  onClick={() => {
-                    setIsHireModalOpen(true);
-                    setHireSuccess(false);
-                  }}
-                  className="bg-[#FF7020] hover:bg-[#ea5e10] text-white font-black text-xs sm:text-sm px-6 py-3 rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Car size={15} />
-                  <span>Book Yeshwanth for Your Car</span>
-                </button>
-              </div>
+              <h3 className="font-black text-slate-900 text-sm mb-1">100% Verified Trust</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Comprehensive background checks, police verification & RTO commercial driving license authentication.
+              </p>
             </div>
 
-            {/* Driver Details Body */}
-            <div className="p-6 sm:p-8 space-y-6">
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-center">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-3">
+                <Car size={24} />
+              </div>
+              <h3 className="font-black text-slate-900 text-sm mb-1">Secure & Skilled</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Expert handling of Hatchbacks, Sedans, Full SUVs, EVs, Manual & Automatic transmissions without worry.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-center">
+              <div className="w-12 h-12 rounded-2xl bg-orange-50 text-[#FF7020] flex items-center justify-center mx-auto mb-3">
+                <Clock size={24} />
+              </div>
+              <h3 className="font-black text-slate-900 text-sm mb-1">Versatile & On-Demand</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Flexible packages from 4-hour city errands to multi-day outstation road trips across Karnataka & India.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow text-center">
+              <div className="w-12 h-12 rounded-2xl bg-purple-50 text-purple-700 flex items-center justify-center mx-auto mb-3">
+                <Phone size={24} />
+              </div>
+              <h3 className="font-black text-slate-900 text-sm mb-1">Punctual & Supported</h3>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Guaranteed on-time arrival at your doorstep in Bangalore with 24/7 route helpline support ({CONTACT_PHONE}).
+              </p>
+            </div>
+          </div>
+
+          {/* DriveU Transparent Market Pricing Cards */}
+          <div>
+            <div className="text-center mb-6">
+              <span className="text-xs font-black uppercase tracking-wider text-[#FF7020]">Transparent Market Tariff</span>
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 font-display mt-0.5">
+                Standard Driver Hire Charges (Zero Hidden Costs)
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               
-              {/* About */}
-              <div>
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">About The Chauffeur</h3>
-                <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">
-                  {driver.bio}
-                </p>
-              </div>
-
-              {/* Supported Vehicle Types */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                    Vehicles Yeshwanth Can Drive (Sedan & SUV Specialist)
-                  </h3>
-                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                    Manual & Automatic Certified
+              {/* Plan 1: 4 Hours Local */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-[#0A3D73] transition-all flex flex-col justify-between">
+                <div>
+                  <span className="bg-blue-50 text-[#0A3D73] text-[10px] font-black uppercase px-2.5 py-1 rounded-md">
+                    Short Errand
                   </span>
+                  <h4 className="font-black text-base text-slate-900 mt-2">Local City (4 Hours)</h4>
+                  <div className="mt-3 mb-4">
+                    <span className="text-3xl font-black text-[#0A3D73] font-mono">₹499</span>
+                    <span className="text-xs text-slate-400 font-medium"> / 4 Hours</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6">
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Up to 40 KM driving in Bangalore</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Extra hour @ ₹99 / hr</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Shopping, hospital & meetings</li>
+                  </ul>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {[
-                    { label: 'All Sedans (Swift Dzire, Toyota Etios, Honda City, Verna, Ciaz, Virtus)', type: 'Manual & AT' },
-                    { label: 'Full-Size SUVs & MPVs (Innova Crysta, Fortuner, Scorpio-N, XUV700, Safari, Ertiga)', type: 'Manual & AT' },
-                    { label: 'Compact & Mid SUVs (Creta, Seltos, Brezza, Nexon, Grand Vitara, Elevate)', type: 'Manual & AT' },
-                    { label: 'Western Ghats Mountain Route Expert (Coorg, Ooty, Chikmagalur, Wayanad)', type: 'Hill Specialist' },
-                    { label: 'Long Distance Highway Driving (Bangalore to All India Routes)', type: 'Interstate Highway' },
-                    { label: 'Bangalore City Traffic & Daily Office Commutes', type: 'City Commute' },
-                  ].map((v, i) => (
-                    <div key={i} className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle size={15} className="text-emerald-600 shrink-0" />
-                        <span className="text-xs font-bold text-slate-800">{v.label}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHireForm({ ...hireForm, tripType: 'Local 4Hr (Bangalore City)' });
+                    setIsHireModalOpen(true);
+                  }}
+                  className="w-full bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Book 4-Hr Driver
+                </button>
               </div>
 
-              {/* Verifications & Badges */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-slate-100 text-center">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-emerald-600 font-black text-sm block">✓ Aadhaar Verified</span>
-                  <span className="text-[10px] text-slate-500">Government ID Verified</span>
+              {/* Plan 2: 8 Hours Local (POPULAR) */}
+              <div className="bg-white rounded-3xl p-6 border-2 border-[#0A3D73] shadow-md relative flex flex-col justify-between">
+                <div className="absolute -top-3 right-5 bg-[#FF7020] text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-sm">
+                  Most Popular
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-emerald-600 font-black text-sm block">✓ DL Background Checked</span>
-                  <span className="text-[10px] text-slate-500">Clear RTO Record</span>
+                <div>
+                  <span className="bg-blue-50 text-[#0A3D73] text-[10px] font-black uppercase px-2.5 py-1 rounded-md">
+                    Full Day City
+                  </span>
+                  <h4 className="font-black text-base text-slate-900 mt-2">Local City (8 Hours)</h4>
+                  <div className="mt-3 mb-4">
+                    <span className="text-3xl font-black text-[#0A3D73] font-mono">₹899</span>
+                    <span className="text-xs text-slate-400 font-medium"> / 8 Hours</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6">
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Up to 80 KM driving in Bangalore</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Extra hour @ ₹99 / hr</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Office commute & day-long visits</li>
+                  </ul>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-emerald-600 font-black text-sm block">✓ Non-Smoker & Teetotaler</span>
-                  <span className="text-[10px] text-slate-500">Professional Etiquette</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHireForm({ ...hireForm, tripType: 'Local 8Hr (Bangalore City)' });
+                    setIsHireModalOpen(true);
+                  }}
+                  className="w-full bg-[#0A3D73] hover:bg-[#072f59] text-white font-black text-xs py-2.5 rounded-xl transition-all shadow-sm cursor-pointer"
+                >
+                  Book 8-Hr Driver
+                </button>
+              </div>
+
+              {/* Plan 3: Outstation Round Trip */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-[#0A3D73] transition-all flex flex-col justify-between">
+                <div>
+                  <span className="bg-emerald-50 text-emerald-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-md">
+                    Highway Specialist
+                  </span>
+                  <h4 className="font-black text-base text-slate-900 mt-2">Outstation Round Trip</h4>
+                  <div className="mt-3 mb-4">
+                    <span className="text-3xl font-black text-[#0A3D73] font-mono">₹1,200</span>
+                    <span className="text-xs text-slate-400 font-medium"> / Day (12 Hrs)</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6">
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Coorg, Ooty, Chikmagalur, Goa</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Ghat roads & expressway expert</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Night bata ₹300 (10 PM - 6 AM)</li>
+                  </ul>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
-                  <span className="text-emerald-600 font-black text-sm block">✓ Western Ghats Expert</span>
-                  <span className="text-[10px] text-slate-500">Coorg, Ooty, Chikmagalur</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHireForm({ ...hireForm, tripType: 'Outstation Round Trip (Personal Car)' });
+                    setIsHireModalOpen(true);
+                  }}
+                  className="w-full bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Book Outstation Chauffeur
+                </button>
+              </div>
+
+              {/* Plan 4: One-Way Outstation Drop */}
+              <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:border-[#0A3D73] transition-all flex flex-col justify-between">
+                <div>
+                  <span className="bg-amber-50 text-amber-800 text-[10px] font-black uppercase px-2.5 py-1 rounded-md">
+                    One-Way Relocation
+                  </span>
+                  <h4 className="font-black text-base text-slate-900 mt-2">One-Way City Drop</h4>
+                  <div className="mt-3 mb-4">
+                    <span className="text-3xl font-black text-[#0A3D73] font-mono">₹1,499</span>
+                    <span className="text-xs text-slate-400 font-medium"> / Fixed Drop</span>
+                  </div>
+                  <ul className="space-y-2 text-xs text-slate-600 mb-6">
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Drops to Mysore, Hassan, Tumkur</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Driver return allowance included</li>
+                    <li className="flex items-center gap-1.5"><Check size={14} className="text-emerald-600" /> Safe transit of your personal car</li>
+                  </ul>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHireForm({ ...hireForm, tripType: 'One-Way Outstation City Drop' });
+                    setIsHireModalOpen(true);
+                  }}
+                  className="w-full bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Book One-Way Driver
+                </button>
               </div>
 
             </div>
           </div>
 
-          {/* 3. Transparent Market Price Comparison Table for White Board Driver */}
-          <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm">
-            <div className="mb-6">
-              <span className="text-xs font-black uppercase tracking-wider text-[#FF7020]">
-                Market Benchmark & Fair Tariff Policy
-              </span>
-              <h3 className="text-2xl font-black text-[#0A3D73] font-display mt-1">
-                Transparent Driver-On-Demand Pricing
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Standard offline market drivers charge varying hidden fees. Here is our completely transparent driver tariff for your personal car:
-              </p>
+          {/* DriveU Use Cases Section */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+            <h3 className="text-xl font-black text-slate-900 font-display mb-6 text-center">
+              Why Bangalore Vehicle Owners Hire Our Chauffeurs
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#FF7020] flex items-center justify-center mb-3">
+                  <Compass size={20} />
+                </div>
+                <h4 className="font-black text-slate-900 text-sm mb-1">Outstation Family Trips</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Avoid driver fatigue on Bangalore-Mysore expressway and steep Western Ghat hairpins. Enjoy scenic sights with your family while our professional chauffeur drives your car smoothly.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-[#0A3D73] flex items-center justify-center mb-3">
+                  <Briefcase size={20} />
+                </div>
+                <h4 className="font-black text-slate-900 text-sm mb-1">Corporate & Business Travel</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Make conference calls, prepare presentations, and arrive composed at meetings in Whitefield, Electronic City or Embassy Golf Links while your chauffeur handles Bangalore traffic.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center mb-3">
+                  <Moon size={20} />
+                </div>
+                <h4 className="font-black text-slate-900 text-sm mb-1">Late Night Drives & Weddings</h4>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Enjoy late-night parties, weddings, or family get-togethers without stressing about driving home late. Our verified chauffeurs guarantee safe doorstep arrival.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Verified Chauffeur Roster (NO DRIVER IMAGE - DETAILS & VERIFIED CREDENTIALS ONLY) */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-md p-6 sm:p-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-5 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-[#0A3D73] text-white flex items-center justify-center font-black text-lg shadow-sm">
+                  <ShieldCheck size={26} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-black text-slate-900">
+                      Verified Personal Chauffeur Roster (Bangalore)
+                    </h3>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full">
+                      ✓ RTO Authenticated
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Lead Chauffeur: {driver.name} (10+ Yrs Exp) & Certified Drivers Team
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <a
+                  href={`tel:${CONTACT_PHONE_TEL}`}
+                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs py-2 px-3.5 rounded-xl transition-all flex items-center gap-1.5"
+                >
+                  <Phone size={13} />
+                  <span>Call {CONTACT_PHONE}</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => setIsHireModalOpen(true)}
+                  className="bg-[#0A3D73] hover:bg-[#072f59] text-white font-black text-xs py-2 px-4 rounded-xl transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Car size={14} />
+                  <span>Request Driver</span>
+                </button>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="bg-[#0A3D73] text-white">
-                    <th className="py-3 px-4 rounded-tl-xl font-black">Duty Type</th>
-                    <th className="py-3 px-4 font-black">Duration / Coverage</th>
-                    <th className="py-3 px-4 font-black">Standard Market Rate</th>
-                    <th className="py-3 px-4 font-black text-amber-300">BookMyRoute Rate</th>
-                    <th className="py-3 px-4 rounded-tr-xl font-black">Driver Entitlement</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 text-slate-700">
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">City Short Duty</td>
-                    <td className="py-3.5 px-4">Up to 4 Hours (Within City)</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹550 - ₹600</td>
-                    <td className="py-3.5 px-4 font-black text-emerald-700 bg-emerald-50/50">₹499</td>
-                    <td className="py-3.5 px-4 text-slate-500">Local commute, hospital visit, shopping</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">City Standard Duty</td>
-                    <td className="py-3.5 px-4">Up to 8 Hours / 80 KM</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹900 - ₹1,000</td>
-                    <td className="py-3.5 px-4 font-black text-emerald-700 bg-emerald-50/50">₹799</td>
-                    <td className="py-3.5 px-4 text-slate-500">Full day meetings, weddings, local sightseeing</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">City Full Day Duty</td>
-                    <td className="py-3.5 px-4">Up to 12 Hours</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹1,200 - ₹1,400</td>
-                    <td className="py-3.5 px-4 font-black text-emerald-700 bg-emerald-50/50">₹1,099</td>
-                    <td className="py-3.5 px-4 text-slate-500">Extended day city events & airport transfers</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50 bg-amber-50/30">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">Outstation Round Trip</td>
-                    <td className="py-3.5 px-4 font-semibold">Per Calendar Day (Ghats & Highways)</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹1,300 - ₹1,500 / day</td>
-                    <td className="py-3.5 px-4 font-black text-[#0A3D73] bg-amber-100/50 text-sm">₹1,199 / day</td>
-                    <td className="py-3.5 px-4 text-slate-600">Customer provides basic food & lodging during stay</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">Night Allowance</td>
-                    <td className="py-3.5 px-4">10:00 PM to 06:00 AM</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹250 / night</td>
-                    <td className="py-3.5 px-4 font-black text-emerald-700 bg-emerald-50/50">₹200 / night</td>
-                    <td className="py-3.5 px-4 text-slate-500">Applicable only if driving after 10:00 PM</td>
-                  </tr>
-                  <tr className="hover:bg-slate-50">
-                    <td className="py-3.5 px-4 font-bold text-slate-900">Luxury / EV Specialist Surcharge</td>
-                    <td className="py-3.5 px-4">BMW, Mercedes, Audi, Volvo, High-Tech EVs</td>
-                    <td className="py-3.5 px-4 line-through text-slate-400">₹400 / day</td>
-                    <td className="py-3.5 px-4 font-black text-emerald-700 bg-emerald-50/50">₹200 / day</td>
-                    <td className="py-3.5 px-4 text-slate-500">Driver certified in luxury electronic cockpits</td>
-                  </tr>
-                </tbody>
-              </table>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                  Vehicle Expertise & Transmission:
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="font-bold text-slate-700 block">Sedan Models:</span>
+                    <span className="text-slate-500 text-[11px]">Dzire, Etios, Honda City, Verna, Virtus</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="font-bold text-slate-700 block">SUV & MPV Models:</span>
+                    <span className="text-slate-500 text-[11px]">Innova Crysta, Fortuner, XUV700, Creta, Brezza</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="font-bold text-slate-700 block">Transmission:</span>
+                    <span className="text-slate-500 text-[11px]">Both Manual & Automatic (Torque, CVT, DCT)</span>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <span className="font-bold text-slate-700 block">Highway Certified:</span>
+                    <span className="text-slate-500 text-[11px]">Ghat Sections, Night Driving, Expressways</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px]">
+                  Verification & Safety Standards:
+                </h4>
+                <div className="space-y-2 text-slate-600">
+                  <p className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-600" /> Government RTO Commercial Driving License Verified</p>
+                  <p className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-600" /> Police Clearance & Background Verified</p>
+                  <p className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-600" /> Non-Smoker, Courteous & Punctual Etiquette</p>
+                  <p className="flex items-center gap-2"><CheckCircle size={14} className="text-emerald-600" /> Languages: Kannada, English, Hindi & Telugu</p>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-slate-700">
-              <span className="font-semibold">💡 No advance deposit required. Pay driver directly after duty completion.</span>
-              <button
-                onClick={() => {
-                  setIsHireModalOpen(true);
-                  setHireSuccess(false);
-                }}
-                className="bg-[#0A3D73] text-white font-bold px-4 py-1.5 rounded-lg hover:bg-[#072d54] cursor-pointer"
-              >
-                Book Driver Now →
-              </button>
+          </div>
+
+          {/* Quick FAQ Strip */}
+          <div className="bg-blue-50/70 border border-blue-200/80 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+            <div>
+              <span className="font-black text-[#0A3D73] block text-sm">Need a driver within the next 2 hours in Bangalore?</span>
+              <span className="text-slate-600">Call our direct dispatch desk for express assignment across all Bangalore zones.</span>
             </div>
+            <a
+              href={`tel:${CONTACT_PHONE_TEL}`}
+              className="bg-[#0A3D73] hover:bg-[#072f59] text-white font-black text-xs py-2.5 px-5 rounded-xl transition-all shadow-xs shrink-0 flex items-center gap-1.5"
+            >
+              <Phone size={14} />
+              <span>Call Helpline ({CONTACT_PHONE})</span>
+            </a>
           </div>
 
         </div>
       )}
 
-      {/* TAB 2: DRIVER ONBOARDING FORM */}
+      {/* TAB 2: DRIVER ONBOARDING (JOIN AS DRIVER) */}
       {activeTab === 'onboarding' && (
         <div className="container-x max-w-4xl mx-auto px-4">
-          <div className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-lg">
-            
-            <div className="text-center max-w-2xl mx-auto mb-8">
-              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-black uppercase px-3 py-1 rounded-full mb-2">
-                <CheckCircle size={14} /> Join BookMyRoute Chauffeur Network
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#0A3D73] font-display">
-                Driver Onboarding & License Verification
+          <div className="bg-white rounded-3xl p-6 sm:p-10 shadow-sm border border-slate-200">
+            <div className="text-center max-w-xl mx-auto mb-8">
+              <span className="text-xs font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Chauffeur Partner Portal
+              </span>
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 font-display mt-2">
+                Join BookMyRoute as a Verified Personal Driver
               </h2>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                Are you a skilled, courteous personal car driver? Submit your driving license and details below. Our team verifies your credentials and connects you with high-paying daily and outstation trips.
+                Earn ₹35,000 to ₹55,000/month driving customer personal cars. Upload your DL and details to get verified.
               </p>
             </div>
 
             {onboardSubmitted ? (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-8 text-center space-y-3">
                 <CheckCircle size={48} className="text-emerald-600 mx-auto" />
-                <h3 className="text-xl font-black text-emerald-900">Application Submitted for Verification!</h3>
-                <p className="text-xs sm:text-sm text-emerald-800 max-w-lg mx-auto">
-                  Thank you, <strong>{onboardForm.fullName}</strong>. Your driving license details and profile have been sent to our verification desk on WhatsApp (+91 72593 35286). We will complete background checks and contact you within 24 hours.
+                <h3 className="text-xl font-black text-slate-900">Application Submitted Successfully!</h3>
+                <p className="text-xs text-slate-600 max-w-md mx-auto">
+                  Our dispatch manager will review your DL details and contact you on WhatsApp (+91 {onboardForm.mobileNumber}) within 2 hours for document verification.
                 </p>
                 <button
+                  type="button"
                   onClick={() => setOnboardSubmitted(false)}
-                  className="bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl hover:bg-emerald-800"
+                  className="bg-[#0A3D73] text-white text-xs font-black px-5 py-2.5 rounded-xl mt-3"
                 >
                   Submit Another Application
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleOnboardSubmit} className="space-y-6">
+              <form onSubmit={handleOnboardSubmit} className="space-y-6 text-xs">
                 
-                {/* 1. Personal & Contact Details */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-                    1. Driver Personal Information
-                  </h4>
-
+                {/* Personal Information */}
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2 mb-4 flex items-center gap-1.5">
+                    <UserCheck size={16} className="text-emerald-600" />
+                    <span>Personal Particulars</span>
+                  </h3>
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Full Name (as per Driving License) *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">Full Legal Name (as per DL) *</label>
                       <input
                         type="text"
                         required
                         value={onboardForm.fullName}
                         onChange={(e) => setOnboardForm({ ...onboardForm, fullName: e.target.value })}
-                        placeholder="e.g. Ramesh Kumar"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        placeholder="e.g. Ramesh K"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Mobile Number (WhatsApp Enabled) *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">WhatsApp Mobile Number *</label>
                       <input
                         type="tel"
+                        inputMode="tel"
                         required
                         value={onboardForm.mobileNumber}
                         onChange={(e) => setOnboardForm({ ...onboardForm, mobileNumber: e.target.value })}
-                        placeholder="+91 98765 43210"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        placeholder="10-digit mobile number"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Current Area / Location in Bangalore *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">Current Bangalore Location / Area *</label>
                       <input
                         type="text"
                         required
                         value={onboardForm.cityArea}
                         onChange={(e) => setOnboardForm({ ...onboardForm, cityArea: e.target.value })}
-                        placeholder="e.g. Jayanagar, Whitefield, Hebbal, Yelahanka"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        placeholder="e.g. Jayanagar, BTM, Uttarahalli, Whitefield"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Total Driving Experience *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">Total Driving Experience *</label>
                       <select
                         value={onboardForm.experienceYears}
                         onChange={(e) => setOnboardForm({ ...onboardForm, experienceYears: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
                       >
-                        <option value="3 to 5 Years">3 to 5 Years Experience</option>
-                        <option value="5 to 8 Years">5 to 8 Years Experience</option>
-                        <option value="8 to 12 Years">8 to 12 Years Experience</option>
-                        <option value="12+ Years">12+ Years Veteran Chauffeur</option>
+                        <option>3 - 5 Years</option>
+                        <option>5 - 8 Years</option>
+                        <option>8 - 12 Years</option>
+                        <option>12+ Years</option>
                       </select>
                     </div>
                   </div>
                 </div>
 
-                {/* 2. License & ID Verification */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-                    2. Driving License (DL) & ID Verification Details
-                  </h4>
+                {/* Driving License Particulars */}
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2 mb-4 flex items-center gap-1.5">
+                    <KeyRound size={16} className="text-[#0A3D73]" />
+                    <span>Driving License & Skills</span>
+                  </h3>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Driving License (DL) Number *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">DL Number *</label>
                       <input
                         type="text"
                         required
                         value={onboardForm.dlNumber}
                         onChange={(e) => setOnboardForm({ ...onboardForm, dlNumber: e.target.value.toUpperCase() })}
-                        placeholder="KA05 20180012345"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold uppercase focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        placeholder="e.g. KA05 20150001234"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-mono font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        License Category *
-                      </label>
-                      <select
-                        value={onboardForm.dlType}
-                        onChange={(e) => setOnboardForm({ ...onboardForm, dlType: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
-                      >
-                        <option value="LMV - Light Motor Vehicle">LMV - Light Motor Vehicle (Personal Car)</option>
-                        <option value="LMV-TR - Commercial Transport">LMV-TR - Commercial Transport</option>
-                        <option value="HMV / Heavy Vehicle">HMV / Heavy Vehicle</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Aadhaar Number (Last 4 digits or full)
-                      </label>
-                      <input
-                        type="text"
-                        value={onboardForm.aadhaarNumber}
-                        onChange={(e) => setOnboardForm({ ...onboardForm, aadhaarNumber: e.target.value })}
-                        placeholder="XXXX XXXX 1234"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3. Vehicle Capabilities */}
-                <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-2">
-                    3. Driving Capabilities & Background
-                  </h4>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Gear / Transmission Capability *
-                      </label>
+                      <label className="font-bold text-slate-700 block mb-1">Transmission Skill *</label>
                       <select
                         value={onboardForm.transmissionSkill}
                         onChange={(e) => setOnboardForm({ ...onboardForm, transmissionSkill: e.target.value })}
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
                       >
-                        <option value="Both Manual & Automatic">Both Manual & Automatic</option>
-                        <option value="Manual Transmission Only">Manual Transmission Only</option>
-                        <option value="Automatic Transmission Only">Automatic Transmission Only</option>
+                        <option>Both Manual & Automatic</option>
+                        <option>Manual Only</option>
+                        <option>Automatic Only</option>
                       </select>
                     </div>
+                  </div>
+                </div>
 
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Previous Driving Background
-                      </label>
+                {/* Document Uploads (Photo, DL Front, DL Back) */}
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide border-b border-slate-100 pb-2 mb-4 flex items-center gap-1.5">
+                    <Camera size={16} className="text-[#FF7020]" />
+                    <span>Upload Documents for Verification</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {/* Driver Photo */}
+                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-emerald-500 transition-colors bg-slate-50/50">
+                      <Camera size={24} className="mx-auto text-slate-400 mb-1" />
+                      <span className="font-bold text-slate-800 block text-xs">Driver Profile Photo</span>
+                      <span className="text-[10px] text-slate-400 block mb-2">Clear front face photo</span>
                       <input
-                        type="text"
-                        value={onboardForm.previousExperience}
-                        onChange={(e) => setOnboardForm({ ...onboardForm, previousExperience: e.target.value })}
-                        placeholder="e.g. Private family driver, corporate VIP driver"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        className="text-[10px] w-full"
                       />
+                      {driverPhotoFile && <span className="text-[10px] font-bold text-emerald-700 mt-1 block">✓ {driverPhotoFile.name}</span>}
+                    </div>
+
+                    {/* DL Front */}
+                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-emerald-500 transition-colors bg-slate-50/50">
+                      <FileText size={24} className="mx-auto text-slate-400 mb-1" />
+                      <span className="font-bold text-slate-800 block text-xs">DL Front Copy *</span>
+                      <span className="text-[10px] text-slate-400 block mb-2">Photo & license number</span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleDlFrontUpload}
+                        className="text-[10px] w-full"
+                      />
+                      {dlFrontFile && <span className="text-[10px] font-bold text-emerald-700 mt-1 block">✓ {dlFrontFile.name}</span>}
+                    </div>
+
+                    {/* DL Back */}
+                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center hover:border-emerald-500 transition-colors bg-slate-50/50">
+                      <FileText size={24} className="mx-auto text-slate-400 mb-1" />
+                      <span className="font-bold text-slate-800 block text-xs">DL Back Copy</span>
+                      <span className="text-[10px] text-slate-400 block mb-2">Vehicle authorization & address</span>
+                      <input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handleDlBackUpload}
+                        className="text-[10px] w-full"
+                      />
+                      {dlBackFile && <span className="text-[10px] font-bold text-emerald-700 mt-1 block">✓ {dlBackFile.name}</span>}
                     </div>
                   </div>
                 </div>
 
-                {/* 4. Verification Document & Photo Uploads (DL & Profile Photo) */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">
-                      4. Upload Verification Documents (Driving License & Photo)
-                    </h4>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1">
-                      <ShieldCheck size={12} /> Instant 100% Verification
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {/* Driver Profile Photo */}
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 hover:border-[#0A3D73] rounded-2xl p-4 transition-colors">
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
-                        Driver Profile Photo *
-                      </label>
-                      <p className="text-[11px] text-slate-500 mb-3">Clear selfie or passport-style headshot</p>
-
-                      {driverPhotoPreview ? (
-                        <div className="space-y-2">
-                          <img
-                            src={driverPhotoPreview}
-                            alt="Driver Photo Preview"
-                            className="w-full h-32 object-cover rounded-xl border border-slate-200"
-                          />
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="truncate max-w-[150px] font-medium text-slate-700">
-                              {driverPhotoFile?.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDriverPhotoFile(null);
-                                setDriverPhotoPreview('');
-                              }}
-                              className="text-red-600 hover:text-red-700 font-bold cursor-pointer"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center h-32 cursor-pointer bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-                          <Camera size={26} className="text-slate-400 mb-1.5" />
-                          <span className="text-xs font-bold text-[#0A3D73]">Upload Photo</span>
-                          <span className="text-[10px] text-slate-400">JPG, PNG, WebP</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handlePhotoUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    {/* Driving License Front */}
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 hover:border-[#0A3D73] rounded-2xl p-4 transition-colors">
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
-                        Driving License (Front Side) *
-                      </label>
-                      <p className="text-[11px] text-slate-500 mb-3">Photo showing DL number & validity</p>
-
-                      {dlFrontPreview ? (
-                        <div className="space-y-2">
-                          <img
-                            src={dlFrontPreview}
-                            alt="DL Front Preview"
-                            className="w-full h-32 object-cover rounded-xl border border-slate-200"
-                          />
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="truncate max-w-[150px] font-medium text-slate-700">
-                              {dlFrontFile?.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDlFrontFile(null);
-                                setDlFrontPreview('');
-                              }}
-                              className="text-red-600 hover:text-red-700 font-bold cursor-pointer"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center h-32 cursor-pointer bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-                          <UploadCloud size={26} className="text-slate-400 mb-1.5" />
-                          <span className="text-xs font-bold text-[#0A3D73]">Upload DL Front</span>
-                          <span className="text-[10px] text-slate-400">JPG, PNG, PDF</span>
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={handleDlFrontUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-
-                    {/* Driving License Back */}
-                    <div className="bg-slate-50 border-2 border-dashed border-slate-200 hover:border-[#0A3D73] rounded-2xl p-4 transition-colors">
-                      <label className="block text-xs font-bold text-slate-800 mb-1">
-                        Driving License (Back Side)
-                      </label>
-                      <p className="text-[11px] text-slate-500 mb-3">Showing vehicle classes & address</p>
-
-                      {dlBackPreview ? (
-                        <div className="space-y-2">
-                          <img
-                            src={dlBackPreview}
-                            alt="DL Back Preview"
-                            className="w-full h-32 object-cover rounded-xl border border-slate-200"
-                          />
-                          <div className="flex items-center justify-between text-[11px]">
-                            <span className="truncate max-w-[150px] font-medium text-slate-700">
-                              {dlBackFile?.name}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setDlBackFile(null);
-                                setDlBackPreview('');
-                              }}
-                              className="text-red-600 hover:text-red-700 font-bold cursor-pointer"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center h-32 cursor-pointer bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
-                          <UploadCloud size={26} className="text-slate-400 mb-1.5" />
-                          <span className="text-xs font-bold text-[#0A3D73]">Upload DL Back</span>
-                          <span className="text-[10px] text-slate-400">JPG, PNG, PDF</span>
-                          <input
-                            type="file"
-                            accept="image/*,application/pdf"
-                            onChange={handleDlBackUpload}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-2 text-xs text-amber-900">
-                    <input
-                      type="checkbox"
-                      id="cleanRecord"
-                      checked={onboardForm.noAccidentRecord}
-                      onChange={(e) => setOnboardForm({ ...onboardForm, noAccidentRecord: e.target.checked })}
-                      className="rounded text-[#0A3D73] focus:ring-0"
-                    />
-                    <label htmlFor="cleanRecord" className="font-semibold cursor-pointer">
-                      I declare that I hold an authentic Indian Driving License with a clean traffic record, no criminal complaints, and follow strict non-smoking professional etiquette.
-                    </label>
-                  </div>
-                </div>
-
-                {/* Submit button */}
                 <button
                   type="submit"
-                  className="w-full bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black text-sm py-4 rounded-xl shadow-lg transition-transform hover:scale-[1.01] flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-black text-sm py-3.5 px-6 rounded-2xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <MessageSquare size={18} />
-                  <span>Submit Application & Verification Documents to WhatsApp (+91 72593 35286)</span>
+                  <ShieldCheck size={18} />
+                  <span>Submit Application for Approval</span>
                 </button>
               </form>
             )}
@@ -817,117 +793,163 @@ _Applicant has uploaded DL documents & photo. Please verify and approve driver p
         </div>
       )}
 
-      {/* HIRE YESHWANTH K MODAL */}
+      {/* HIRE DRIVER MODAL */}
       {isHireModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl relative">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-slate-100 max-h-[90vh] overflow-y-auto">
             <button
-              onClick={() => setIsHireModalOpen(false)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 font-black text-base"
+              onClick={() => { setIsHireModalOpen(false); setHireSuccess(false); }}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 font-bold p-1 cursor-pointer"
             >
               ✕
             </button>
 
             <div className="mb-4">
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
-                Verified Chauffeur
-              </span>
-              <h3 className="text-xl font-black text-[#0A3D73] mt-1">Hire Yeshwanth K</h3>
-              <p className="text-xs text-slate-500">Provide trip details. Instant quotation sent to WhatsApp.</p>
+              <span className="text-[10px] font-black uppercase text-[#FF7020] tracking-wider">Fast Chauffeur Booking</span>
+              <h3 className="text-xl font-black text-[#0A3D73] font-display">
+                Request a Verified Driver for Your Car
+              </h3>
+              <p className="text-xs text-slate-500">
+                Package: <strong>{hireForm.tripType}</strong> • Standard Market Tariff
+              </p>
             </div>
 
-            <form onSubmit={handleHireSubmit} className="space-y-3 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-0.5">Your Full Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={hireForm.customerName}
-                  onChange={(e) => setHireForm({ ...hireForm, customerName: e.target.value })}
-                  placeholder="e.g. Anand Sharma"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
-                />
+            {hireSuccess ? (
+              <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-6 text-center space-y-2">
+                <CheckCircle size={40} className="text-emerald-600 mx-auto" />
+                <h4 className="font-black text-base text-slate-900">Driver Request Dispatched!</h4>
+                <p className="text-xs text-slate-600">
+                  Your details and quotation were sent to our operations desk ({CONTACT_PHONE}) and customer support email. A chauffeur will be confirmed shortly.
+                </p>
+                <button
+                  onClick={() => setIsHireModalOpen(false)}
+                  className="mt-3 bg-[#0A3D73] text-white text-xs font-bold px-4 py-2 rounded-xl cursor-pointer"
+                >
+                  Close Window
+                </button>
               </div>
-
-              <div className="grid grid-cols-2 gap-2">
+            ) : (
+              <form onSubmit={handleHireSubmit} className="space-y-4 text-xs">
                 <div>
-                  <label className="font-bold text-slate-700 block mb-0.5">Mobile Number *</label>
+                  <label className="font-bold text-slate-700 block mb-1">Your Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={hireForm.customerName}
+                    onChange={(e) => setHireForm({ ...hireForm, customerName: e.target.value })}
+                    placeholder="Enter full name"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Mobile / WhatsApp Number *</label>
                   <input
                     type="tel"
+                    inputMode="tel"
                     required
                     value={hireForm.customerPhone}
                     onChange={(e) => setHireForm({ ...hireForm, customerPhone: e.target.value })}
-                    placeholder="+91 98765 43210"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
+                    placeholder="10-digit mobile number"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs focus:outline-none focus:ring-2 focus:ring-[#0A3D73]"
                   />
                 </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-0.5">Duty Type</label>
-                  <select
-                    value={hireForm.tripType}
-                    onChange={(e) => setHireForm({ ...hireForm, tripType: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
-                  >
-                    <option value="Local 8 Hrs (₹799)">Local 8 Hrs (₹799)</option>
-                    <option value="Local 4 Hrs (₹499)">Local 4 Hrs (₹499)</option>
-                    <option value="Outstation Trip (₹1,199/day)">Outstation Trip (₹1,199/day)</option>
-                  </select>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-0.5">Travel Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={hireForm.tripDate}
-                    onChange={(e) => setHireForm({ ...hireForm, tripDate: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
-                  />
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Trip Service Type</label>
+                    <select
+                      value={hireForm.tripType}
+                      onChange={(e) => setHireForm({ ...hireForm, tripType: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs cursor-pointer"
+                    >
+                      <option>Local 4Hr (Bangalore City)</option>
+                      <option>Local 8Hr (Bangalore City)</option>
+                      <option>Outstation Round Trip (Personal Car)</option>
+                      <option>One-Way Outstation City Drop</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Duration (Days)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="15"
+                      value={hireForm.durationDays}
+                      onChange={(e) => setHireForm({ ...hireForm, durationDays: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs"
+                    />
+                  </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Your Car Model *</label>
+                    <input
+                      type="text"
+                      required
+                      value={hireForm.yourCarModel}
+                      onChange={(e) => setHireForm({ ...hireForm, yourCarModel: e.target.value })}
+                      placeholder="e.g. Swift, Innova, Creta"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-bold text-slate-700 block mb-1">Transmission</label>
+                    <select
+                      value={hireForm.transmission}
+                      onChange={(e) => setHireForm({ ...hireForm, transmission: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 font-semibold text-slate-800 text-base sm:text-xs cursor-pointer"
+                    >
+                      <option>Automatic</option>
+                      <option>Manual</option>
+                    </select>
+                  </div>
+                </div>
+
                 <div>
-                  <label className="font-bold text-slate-700 block mb-0.5">Your Car Model</label>
+                  <label className="font-bold text-slate-700 block mb-1">Pickup Address in Bangalore *</label>
                   <input
                     type="text"
-                    value={hireForm.yourCarModel}
-                    onChange={(e) => setHireForm({ ...hireForm, yourCarModel: e.target.value })}
-                    placeholder="e.g. Dzire / Etios / Creta / Innova / Fortuner (Sedan & SUV)"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
+                    required
+                    value={hireForm.pickupAddress}
+                    onChange={(e) => setHireForm({ ...hireForm, pickupAddress: e.target.value })}
+                    placeholder="e.g. Uttarahalli, Indiranagar, Koramangala"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-800 text-base sm:text-xs"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-0.5">Pickup Location in Bangalore *</label>
-                <input
-                  type="text"
-                  required
-                  value={hireForm.pickupAddress}
-                  onChange={(e) => setHireForm({ ...hireForm, pickupAddress: e.target.value })}
-                  placeholder="e.g. Jayanagar 4th Block"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
-                />
-              </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Destination / Route (if outstation)</label>
+                  <input
+                    type="text"
+                    value={hireForm.destination}
+                    onChange={(e) => setHireForm({ ...hireForm, destination: e.target.value })}
+                    placeholder="e.g. Coorg, Ooty, Mysore, Bangalore Local"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-semibold text-slate-800 text-base sm:text-xs"
+                  />
+                </div>
 
-              <div>
-                <label className="font-bold text-slate-700 block mb-0.5">Destination / Route</label>
-                <input
-                  type="text"
-                  value={hireForm.destination}
-                  onChange={(e) => setHireForm({ ...hireForm, destination: e.target.value })}
-                  placeholder="e.g. Coorg, Ooty, or City Local"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-semibold"
-                />
-              </div>
+                <div className="p-3 bg-blue-50/80 rounded-xl border border-blue-200 flex items-center justify-between">
+                  <span className="font-bold text-slate-700">Estimated Driver Tariff:</span>
+                  <span className="text-base font-black text-[#0A3D73] font-mono">
+                    ₹{calculateDriverFare().toLocaleString()}
+                  </span>
+                </div>
 
-              <button
-                type="submit"
-                className="w-full bg-[#FF7020] hover:bg-[#e05f15] text-white font-black py-3 rounded-xl shadow-md transition-all mt-3"
-              >
-                Confirm & Send Request to Yeshwanth K
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={isSubmittingHire}
+                  className="w-full bg-[#0A3D73] hover:bg-[#072f59] text-white font-black text-xs py-3 px-4 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Car size={15} />
+                  <span>{isSubmittingHire ? 'Dispatching Request...' : 'Confirm & Request Driver'}</span>
+                </button>
+              </form>
+            )}
+
           </div>
         </div>
       )}
