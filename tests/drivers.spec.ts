@@ -6,46 +6,43 @@ test.describe('White Board Drivers & Chauffeur Verification Tests (Read-Only)', 
     await page.goto('/white-board-drivers', { waitUntil: 'domcontentloaded' });
   });
 
-  test('Driver Yeshwanth K profile is displayed with correct contact and specialization', async ({ page }) => {
-    // Verify Yeshwanth K's profile name and photo
-    await expect(page.getByText('Yeshwanth K').first()).toBeVisible({ timeout: 15000 });
+  test('DriveU style temporary driver page loads with 4 trust pillars and packages', async ({ page }) => {
+    // Check main DriveU style headline
+    await expect(page.getByRole('heading', { name: /Hire Temporary & Professional Drivers at Your Convenience/i })).toBeVisible({ timeout: 15000 });
 
-    // Verify official helpline contact number
+    // Verify 4 Trust Pillars are visible
+    await expect(page.getByText('100% Verified Trust').first()).toBeVisible();
+    await expect(page.getByText('Secure & Skilled').first()).toBeVisible();
+    await expect(page.getByText('Versatile & On-Demand').first()).toBeVisible();
+    await expect(page.getByText('Punctual & Supported').first()).toBeVisible();
+
+    // Verify official helpline contact number is present on the page
     const pageText = await page.innerText('body');
     expect(pageText).toContain('72593 35286');
-
-    // Ensure Yeshwanth's profile is explicitly titled as Sedan & SUV Specialist
-    await expect(page.getByText(/Professional Personal Chauffeur \(Sedan & SUV Specialist\)/i).first()).toBeVisible({ timeout: 15000 });
   });
 
-  test('Driver onboarding form contains file uploads for DL front, back and photo', async ({ page }) => {
-    // Switch to Driver Onboarding tab
-    const onboardTab = page.getByRole('button', { name: /Driver Onboarding/i }).first();
-    await expect(onboardTab).toBeVisible({ timeout: 15000 });
-    await onboardTab.click();
-
-    // Verify DL Front upload button / dropzone
-    await expect(page.getByText(/Driving License \(Front Side\)|Upload DL Front/i).first()).toBeVisible({ timeout: 15000 });
-
-    // Verify DL Back upload button / dropzone
-    await expect(page.getByText(/Driving License \(Back Side\)|Upload DL Back/i).first()).toBeVisible({ timeout: 15000 });
-
-    // Verify Driver photo upload button / dropzone
-    await expect(page.getByText(/Driver Profile Photo|Upload Photo/i).first()).toBeVisible({ timeout: 15000 });
+  test('Driver packages and transparent tariffs are displayed', async ({ page }) => {
+    // Verify transparent packages
+    await expect(page.getByText(/Local City \(4 Hours\)/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText(/₹499/i).first()).toBeVisible();
+    await expect(page.getByText(/Local City \(8 Hours\)/i).first()).toBeVisible();
+    await expect(page.getByText(/₹899/i).first()).toBeVisible();
   });
 
-  test('Onboarding form stays on page and validates required inputs without submission', async ({ page }) => {
-    const onboardTab = page.getByRole('button', { name: /Driver Onboarding/i }).first();
-    await expect(onboardTab).toBeVisible({ timeout: 15000 });
-    await onboardTab.click();
+  test('Driver onboarding modal contains file uploads for DL front, back and photo', async ({ page }) => {
+    // Click Driver Onboarding button
+    const onboardBtn = page.getByRole('button', { name: /Driver Onboarding \(Join as Driver\)/i }).first();
+    await expect(onboardBtn).toBeVisible({ timeout: 15000 });
+    await onboardBtn.click();
 
-    // Find the register button
-    const submitBtn = page.getByRole('button', { name: /Submit|Register/i }).first();
-    if (await submitBtn.isVisible()) {
-      await submitBtn.click();
-      // Form should remain on page without redirecting
-      await expect(page).toHaveURL(/white-board-drivers/);
-    }
+    // Verify DL Front upload
+    await expect(page.getByText(/DL Front Copy/i).first()).toBeVisible({ timeout: 15000 });
+
+    // Verify DL Back upload
+    await expect(page.getByText(/DL Back Copy/i).first()).toBeVisible({ timeout: 15000 });
+
+    // Verify Driver photo upload
+    await expect(page.getByText(/Driver Profile Photo/i).first()).toBeVisible({ timeout: 15000 });
   });
 
 });
