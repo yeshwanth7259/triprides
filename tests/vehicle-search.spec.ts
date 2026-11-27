@@ -38,8 +38,8 @@ test.describe('Vehicle Fare & Autocomplete Functional Tests (Read-Only)', () => 
   test('WhatsApp quote button includes official BookMyRoute helpline reference', async ({ page }) => {
     await page.goto('/', { waitUntil: 'domcontentloaded' });
 
-    // Verify the WhatsApp CTA button is present and read-only inspected
-    const quoteButton = page.getByRole('button', { name: /Get Instant Quote on WhatsApp/i }).first();
+    // Verify the Email & WhatsApp CTA button is present and read-only inspected
+    const quoteButton = page.getByRole('button', { name: /Send Quote to Email & WhatsApp|Get Instant Quote on WhatsApp/i }).first();
     await expect(quoteButton).toBeVisible({ timeout: 15000 });
 
     const pageText = await page.innerText('body');

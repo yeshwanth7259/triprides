@@ -29,9 +29,16 @@ test.describe('Quotation & Tax Invoice Math Validation (Read-Only)', () => {
     await expect(fareValue).toBeVisible({ timeout: 10000 });
   });
 
-  test('Print and PDF action button is available', async ({ page }) => {
-    const printButton = page.getByRole('button', { name: /Print|PDF/i }).first();
-    await expect(printButton).toBeVisible({ timeout: 15000 });
+  test('Direct PDF download button generates and downloads a .pdf file', async ({ page }) => {
+    const downloadButton = page.getByRole('button', { name: /Download PDF/i }).first();
+    await expect(downloadButton).toBeVisible({ timeout: 15000 });
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download', { timeout: 20000 }),
+      downloadButton.click()
+    ]);
+
+    expect(download.suggestedFilename()).toMatch(/^BookMyRoute_.*\.pdf$/);
   });
 
 });
