@@ -79,6 +79,8 @@ export default function InvoicePage() {
   const [paymentMode, setPaymentMode] = useState('Cash to Driver (Offline)');
   const [paymentStatus, setPaymentStatus] = useState('PAID');
   const [notification, setNotification] = useState('');
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   // Handle URL query parameters if passed from booking modal
   useEffect(() => {
@@ -87,6 +89,7 @@ export default function InvoicePage() {
       const idParam = params.get('id');
       const nameParam = params.get('name');
       const phoneParam = params.get('phone');
+      const emailParam = params.get('email');
       const pickupParam = params.get('pickup');
       const dropParam = params.get('drop');
       const vehicleParam = params.get('vehicle');
@@ -99,6 +102,7 @@ export default function InvoicePage() {
 
       if (nameParam) setCustomerName(nameParam);
       if (phoneParam) setCustomerPhone(phoneParam);
+      if (emailParam) setCustomerEmail(emailParam);
       if (pickupParam) setPickupLocation(pickupParam);
       if (dateParam) setTravelDate(dateParam);
       if (idParam) {
@@ -261,18 +265,107 @@ export default function InvoicePage() {
     window.print();
   };
 
-  const handleDownloadPDF = () => {
-    const originalTitle = document.title;
-    const cleanRef = (docMode === 'quotation' ? quotationNumber : invoiceNumber).replace(/[^a-zA-Z0-9_-]/g, '_');
-    const docName = docMode === 'quotation' 
-      ? `BookMyRoute_Quotation_${cleanRef}` 
-      : `BookMyRoute_Tax_Invoice_${cleanRef}`;
-    
-    document.title = docName;
-    window.print();
-    setTimeout(() => {
-      document.title = originalTitle;
-    }, 2000);
+  const handleDownloadPDF = async () => {
+    const element = document.getElementById('printable-area');
+    if (!element) return;
+
+    setIsDownloadingPdf(true);
+    try {
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 5) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
+      const cleanRef = (docMode === 'quotation' ? quotationNumber : invoiceNumber).replace(/[^a-zA-Z0-9_-]/g, '_');
+      const fileName = docMode === 'quotation'
+        ? `BookMyRoute_Quotation_${cleanRef}.pdf`
+        : `BookMyRoute_Tax_Invoice_${cleanRef}.pdf`;
+
+      pdf.save(fileName);
+      setNotification(`${fileName} downloaded successfully!`);
+    } catch (err) {
+      console.error('PDF generation failed:', err);
+      setNotification('Could not generate PDF directly. Please try again.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
+  const handleSendEmailQuote = async () => {
+    if (!customerEmail.trim() && !customerPhone.trim()) {
+      setNotification('Please enter Customer Email or Mobile Number first to dispatch quotation.');
+      return;
+    }
+    setIsSendingEmail(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: customerName || 'Valued Passenger',
+          phone: customerPhone || 'Not Provided',
+          email: customerEmail.trim(),
+          service: `${tripType.toUpperCase()} - ${currentVehicle.name}`,
+          pickup: pickupLocation || 'Bangalore',
+          destination: finalDestinationDisplay,
+          travelDate: travelDate || 'Flexible Date',
+          vehicle: currentVehicle.name,
+          distanceKm,
+          ratePerKm,
+          driverBata,
+          tollEstimate: tollParking,
+          totalFare: grandTotal,
+          status: 'QUOTATION_GENERATED',
+          source: 'Invoice & Quotation Generator'
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotification(
+          customerEmail.trim()
+            ? `Formal Quotation emailed to ${customerEmail.trim()} & BookMyRoute Dispatch (bookmyroute06@gmail.com)!`
+            : 'Formal Quotation dispatched to BookMyRoute Operations (bookmyroute06@gmail.com)!'
+        );
+      } else {
+        setNotification('Failed to send quotation email. Please try again.');
+      }
+    } catch {
+      setNotification('Network error while sending quotation email.');
+    } finally {
+      setIsSendingEmail(false);
+    }
   };
 
   const handleWhatsAppShare = () => {
@@ -376,27 +469,41 @@ _Verified digital receipt by BookMyRoute. Helpline: ${CONTACT_PHONE}_`;
 
           <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
             <button
+              type="button"
               onClick={handleDownloadPDF}
-              className="flex-1 sm:flex-initial bg-[#0A3D73] hover:bg-[#072d54] text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+              disabled={isDownloadingPdf}
+              className="flex-1 sm:flex-initial bg-[#0A3D73] hover:bg-[#072d54] disabled:opacity-60 text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Download size={14} />
-              <span>Download PDF</span>
+              <span>{isDownloadingPdf ? 'Generating PDF...' : 'Download PDF'}</span>
             </button>
 
             <button
+              type="button"
+              onClick={handleSendEmailQuote}
+              disabled={isSendingEmail}
+              className="flex-1 sm:flex-initial bg-[#FF7020] hover:bg-[#e56015] disabled:opacity-60 text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Mail size={14} />
+              <span>{isSendingEmail ? 'Sending...' : 'Email Quotation'}</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handlePrint}
               className="flex-1 sm:flex-initial bg-slate-900 hover:bg-black text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Printer size={14} />
-              <span>Print Document</span>
+              <span>Print</span>
             </button>
 
             <button
+              type="button"
               onClick={handleWhatsAppShare}
               className="w-full sm:w-auto bg-[#25D366] hover:bg-[#1ebd5a] text-white font-black text-xs py-2.5 px-4 rounded-xl transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Share2 size={14} />
-              <span>Share on WhatsApp</span>
+              <span>WhatsApp</span>
             </button>
           </div>
         </div>

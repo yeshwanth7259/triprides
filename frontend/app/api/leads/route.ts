@@ -36,15 +36,16 @@ export async function POST(request: Request) {
       notes: data.notes || ''
     });
 
-    // Send email notification to bookmyroute06@gmail.com asynchronously
-    sendLeadEmailNotification(saved).catch(err => {
-      console.error('[Background Email Error]:', err);
-    });
+    // Dispatch quotation email to client (if provided) and bookmyroute06@gmail.com
+    const emailResult = await sendLeadEmailNotification(saved);
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Lead captured & quotation processed successfully', 
-      lead: saved 
+      message: emailResult.sentToClient
+        ? `Quotation sent to ${saved.email} and BookMyRoute dispatch!`
+        : 'Lead captured & quotation processed successfully', 
+      lead: saved,
+      emailResult
     }, { status: 201 });
   } catch (error: any) {
     console.error('[Leads API Error]:', error);
